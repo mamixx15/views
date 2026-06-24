@@ -1,0 +1,50 @@
+<%- include('partials/head', { title, settings }) %>
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#080808">
+  <div style="text-align:center;max-width:460px;width:100%">
+
+    <!-- Lottie Container -->
+    <div id="lottie-box" style="width:300px;height:300px;margin:0 auto 20px;"></div>
+
+    <!-- Title -->
+    <h1 style="font-size:24px;font-weight:700;color:#ffffff;margin-bottom:10px;font-family:'Inter',sans-serif;letter-spacing:-0.02em">
+      We'll be back soon!
+    </h1>
+    <p style="font-size:14px;color:#555;line-height:1.7;font-family:'Inter',sans-serif;margin-bottom:28px;max-width:340px;margin-left:auto;margin-right:auto">
+      <%= message %>
+    </p>
+
+    <!-- Status pill -->
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:9px 20px;background:#111;border:1px solid #1e1e1e;border-radius:99px">
+      <span style="width:7px;height:7px;background:#f59e0b;border-radius:50%;display:inline-block;flex-shrink:0;animation:pulse 1.5s ease-in-out infinite"></span>
+      <span style="font-size:12px;font-family:'JetBrains Mono',monospace;color:#666">Maintenance in progress</span>
+    </div>
+
+    <!-- Branding -->
+    <p style="margin-top:36px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#222">
+      <%= settings.name %> &mdash; <%= settings.version %>
+    </p>
+  </div>
+</div>
+
+<style>
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%     { opacity:.4; transform:scale(0.85); }
+  }
+</style>
+
+<!-- lottie-web via CDN (no module, no CSP issue) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+<script>
+  lottie.loadAnimation({
+    container:  document.getElementById('lottie-box'),
+    renderer:   'svg',
+    loop:       true,
+    autoplay:   true,
+    path:       '/img/maintenance-lottie.json'
+  });
+</script>
+
+</body>
+</html>
