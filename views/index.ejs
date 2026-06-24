@@ -1,0 +1,480 @@
+<%- include('partials/head', { title, settings }) %>
+<%- include('partials/navbar') %>
+
+<style>
+/* ── Scroll animations ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.08s; }
+.reveal-delay-2 { transition-delay: 0.16s; }
+.reveal-delay-3 { transition-delay: 0.24s; }
+.reveal-delay-4 { transition-delay: 0.32s; }
+
+/* ── Animated gradient border on hero ── */
+@keyframes borderRotate {
+  0%   { background-position: 0% 50%;   }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%;   }
+}
+@keyframes float {
+  0%,100% { transform: translateY(0px);   }
+  50%      { transform: translateY(-8px);  }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* ── FAQ ── */
+.faq-item { border-bottom: 1px solid #1e1e1e; }
+.faq-item:last-child { border-bottom: none; }
+.faq-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 0; background: none; border: none; cursor: pointer;
+  text-align: left; color: #ededed; font-family: 'Inter', sans-serif;
+  font-size: 14px; font-weight: 500; gap: 16px;
+}
+.faq-btn:hover { color: #fff; }
+.faq-answer {
+  overflow: hidden; max-height: 0;
+  transition: max-height 0.35s ease, padding 0.35s ease;
+}
+.faq-answer.open { max-height: 300px; }
+.faq-icon { transition: transform 0.3s ease; flex-shrink: 0; }
+.faq-icon.open { transform: rotate(45deg); }
+
+/* ── Stat counter ── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.stat-num { animation: countUp 0.5s ease both; }
+
+/* ── Feature card hover ── */
+.feature-card {
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: #333 !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+
+/* ── Endpoint pill hover ── */
+.ep-pill {
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.ep-pill:hover {
+  background: rgba(255,255,255,0.08) !important;
+  transform: translateX(4px);
+}
+</style>
+
+<!-- ══════════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════════ -->
+<section class="relative overflow-hidden border-b border-border">
+  <div class="absolute inset-0 grid-bg"></div>
+  <!-- Glow blobs -->
+  <div class="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-[120px] pointer-events-none" style="background:rgba(255,255,255,0.03)"></div>
+  <div class="absolute bottom-0 right-1/4 w-72 h-72 rounded-full blur-[100px] pointer-events-none" style="background:rgba(255,255,255,0.02)"></div>
+
+  <div class="relative max-w-6xl mx-auto px-5 pt-24 pb-28 text-center">
+    <!-- Badge -->
+    <div class="fade-in inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-xs font-mono text-dim mb-8" style="animation-delay:0.1s">
+      <span class="w-1.5 h-1.5 rounded-full bg-success" style="animation:pulse 2s infinite"></span>
+      <%= settings.header.status %> &mdash; <%= settings.version %>
+    </div>
+
+    <h1 class="fade-up font-bold tracking-tight mb-6" style="font-size:clamp(2.2rem,6vw,4rem);line-height:1.1;animation-delay:0.15s">
+      <span class="text-gradient">One API Key.</span><br/>
+      <span style="color:#555;font-weight:300">Unlimited Possibilities.</span>
+    </h1>
+
+    <p class="fade-up text-dim max-w-lg mx-auto mb-10 leading-relaxed" style="font-size:clamp(14px,2vw,17px);animation-delay:0.25s">
+      <%= settings.description %><br/>
+      Built for developers who move fast and break things.
+    </p>
+
+    <div class="fade-up flex flex-wrap items-center justify-center gap-3" style="animation-delay:0.35s">
+      <a href="/auth/register" class="btn-primary px-6 py-3">
+        <span class="mi mi-sm">key</span> Get API Key — Free
+      </a>
+      <a href="/docs" class="btn-secondary px-6 py-3">
+        <span class="mi mi-sm">menu_book</span> Explore Docs
+      </a>
+      <a href="/status" class="btn-secondary px-6 py-3">
+        <span class="mi mi-sm">monitor_heart</span> System Status
+      </a>
+    </div>
+
+    <!-- Floating code preview -->
+    <div class="fade-up mt-14 mx-auto max-w-lg glow reveal reveal-delay-2" style="animation-delay:0.45s">
+      <div class="card overflow-hidden text-left">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-border bg-surface">
+          <div class="flex gap-1.5">
+            <div class="w-3 h-3 rounded-full" style="background:#ef4444;opacity:.7"></div>
+            <div class="w-3 h-3 rounded-full" style="background:#f59e0b;opacity:.7"></div>
+            <div class="w-3 h-3 rounded-full" style="background:#22c55e;opacity:.7"></div>
+          </div>
+          <span class="text-xs font-mono text-dim ml-2">quick-start.js</span>
+        </div>
+        <pre class="p-5 text-xs font-mono overflow-x-auto leading-relaxed" style="color:#ccc"><code><span style="color:#888">// 1. Get your free API key at zarapi.my.id</span>
+<span style="color:#60a5fa">const</span> <span style="color:#ededed">key</span> = <span style="color:#86efac">'nex_xxxxxxxxxxxxxxxx'</span>;
+
+<span style="color:#888">// 2. Call any endpoint</span>
+<span style="color:#60a5fa">const</span> <span style="color:#ededed">res</span> = <span style="color:#60a5fa">await</span> <span style="color:#fda4af">fetch</span>(<span style="color:#86efac">`/api/ai/luminai?text=Hello&apikey=<span style="color:#fbbf24">${key}</span>`</span>);
+<span style="color:#60a5fa">const</span> <span style="color:#ededed">data</span> = <span style="color:#60a5fa">await</span> <span style="color:#ededed">res</span>.<span style="color:#fda4af">json</span>();
+
+<span style="color:#888">// 3. Done! ✓</span>
+<span style="color:#888">// { status: true, result: {...}, creator: "ZarOfficial" }</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     STATS BAR
+═══════════════════════════════════════════════════════ -->
+<section class="border-b border-border bg-surface">
+  <div class="max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 divide-x divide-border">
+    <% var stats = [
+      { icon:'electric_bolt', num:'5+',    label:'API Endpoints',  sub:'Ready to use' },
+      { icon:'monitoring',    num:'99.9%', label:'Uptime SLA',     sub:'Always online' },
+      { icon:'speed',         num:'<100ms',label:'Avg Response',   sub:'Lightning fast' },
+      { icon:'lock',          num:'Free',  label:'To Get Started', sub:'No CC required' },
+    ] %>
+    <% stats.forEach(function(s, i) { %>
+      <div class="flex items-center justify-center gap-3 px-4 py-3 reveal" data-delay="<%= i * 80 %>">
+        <span class="mi mi-md text-dim hidden sm:block"><%= s.icon %></span>
+        <div>
+          <div class="font-bold text-white text-base sm:text-lg"><%= s.num %></div>
+          <div class="text-xs text-dim"><%= s.label %></div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     FEATURES (internal features only)
+═══════════════════════════════════════════════════════ -->
+<section class="py-24 border-b border-border">
+  <div class="max-w-6xl mx-auto px-5">
+    <div class="text-center mb-14 reveal">
+      <span class="badge badge-white mb-4"><span class="mi mi-xs">auto_awesome</span> Platform Features</span>
+      <h2 class="font-bold text-white mt-4 mb-3" style="font-size:clamp(1.6rem,4vw,2.4rem)">
+        Everything in one place.
+      </h2>
+      <p class="text-dim text-sm max-w-md mx-auto">Manage your API key, track usage, monitor quota, and access all endpoints — all from your dashboard.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% var features = [
+        {
+          icon: 'dashboard',
+          title: 'Personal Dashboard',
+          desc: 'Track your API calls, quota usage, success rate, and top endpoints with beautiful real-time charts.',
+          badge: null,
+        },
+        {
+          icon: 'workspace_premium',
+          title: 'Free & Pro Tiers',
+          desc: '100 req/day on Free. Upgrade to Pro for 10,000 req/day. Simple one-time payment via Telegram.',
+          badge: 'Pro',
+        },
+        {
+          icon: 'data_usage',
+          title: 'Quota Monitoring',
+          desc: 'Live daily quota bar on your dashboard. Get email warnings when you hit 80% of your limit.',
+          badge: null,
+        },
+        {
+          icon: 'vpn_key',
+          title: 'Instant API Key',
+          desc: 'Register and get your API key immediately. Regenerate anytime with one click.',
+          badge: null,
+        },
+        {
+          icon: 'history',
+          title: 'Request Logs',
+          desc: 'Full history of your API calls — endpoint, status code, IP, and timestamp. Last 50 requests.',
+          badge: null,
+        },
+        {
+          icon: 'mark_email_read',
+          title: 'Email Notifications',
+          desc: 'Welcome email, OTP login verification, upgrade status, quota warning — all automated.',
+          badge: null,
+        },
+        {
+          icon: 'shield_lock',
+          title: '2FA Login (OTP)',
+          desc: 'Every login triggers a 6-digit OTP to your email. Your account is protected by default.',
+          badge: null,
+        },
+        {
+          icon: 'bar_chart',
+          title: 'Usage Analytics',
+          desc: 'Charts for calls per day, success vs error rate, and top endpoints — per user and global.',
+          badge: null,
+        },
+        {
+          icon: 'notifications',
+          title: 'Admin Announcements',
+          desc: 'Receive important updates from the team directly on your dashboard as notification banners.',
+          badge: null,
+        },
+      ] %>
+      <% features.forEach(function(f, i) { %>
+        <div class="card feature-card p-5 reveal reveal-delay-<%= (i % 3) + 1 %>" style="border-color:#1e1e1e">
+          <div class="flex items-start justify-between mb-4">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,255,255,0.05);border:1px solid #222">
+              <span class="mi mi-sm text-soft"><%= f.icon %></span>
+            </div>
+            <% if (f.badge) { %>
+              <span class="badge badge-purple text-[10px]"><span class="mi mi-xs">workspace_premium</span> <%= f.badge %></span>
+            <% } %>
+          </div>
+          <h3 class="font-semibold text-white text-sm mb-2"><%= f.title %></h3>
+          <p class="text-dim text-xs leading-relaxed"><%= f.desc %></p>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     AVAILABLE ENDPOINTS preview
+═══════════════════════════════════════════════════════ -->
+<section class="py-24 border-b border-border bg-surface">
+  <div class="max-w-6xl mx-auto px-5">
+    <div class="grid md:grid-cols-2 gap-14 items-start">
+      <div class="reveal">
+        <span class="badge badge-white mb-4"><span class="mi mi-xs">api</span> API Endpoints</span>
+        <h2 class="font-bold text-white mt-4 mb-3" style="font-size:clamp(1.4rem,3vw,2rem)">
+          Ready-to-use endpoints<br/>for every use case.
+        </h2>
+        <p class="text-dim text-sm leading-relaxed mb-6">
+          From AI conversations to file tools, downloaders, and utilities — all in one API portal. New endpoints added regularly.
+        </p>
+        <div class="flex gap-3 flex-wrap">
+          <a href="/docs" class="btn-primary text-sm">
+            <span class="mi mi-sm">menu_book</span> View All Docs
+          </a>
+          <a href="/changelog" class="btn-secondary text-sm">
+            <span class="mi mi-sm">history</span> Changelog
+          </a>
+        </div>
+      </div>
+
+      <!-- Live endpoint list from settings -->
+      <div class="space-y-3 reveal reveal-delay-2">
+        <% settings.categories.forEach(function(cat) { %>
+          <div>
+            <p class="text-[10px] font-mono text-dim uppercase tracking-widest mb-2 px-1"><%= cat.name %></p>
+            <div class="space-y-1">
+              <% cat.items.forEach(function(ep) { %>
+                <a href="/docs" class="ep-pill flex items-center gap-3 px-3 py-2.5 rounded-lg" style="background:rgba(255,255,255,0.03);border:1px solid #1e1e1e;text-decoration:none">
+                  <span class="badge method-get text-[10px] shrink-0">GET</span>
+                  <code class="font-mono text-xs text-soft flex-1 truncate"><%= ep.path %></code>
+                  <span class="text-xs text-dim hidden sm:block truncate max-w-[120px]"><%= ep.name %></span>
+                  <% if (ep.status === 'ready') { %>
+                    <span class="w-1.5 h-1.5 rounded-full bg-success shrink-0"></span>
+                  <% } else { %>
+                    <span class="w-1.5 h-1.5 rounded-full bg-warning shrink-0"></span>
+                  <% } %>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     PRICING TEASER
+═══════════════════════════════════════════════════════ -->
+<section class="py-24 border-b border-border">
+  <div class="max-w-5xl mx-auto px-5">
+    <div class="text-center mb-12 reveal">
+      <span class="badge badge-white mb-4"><span class="mi mi-xs">workspace_premium</span> Pricing</span>
+      <h2 class="font-bold text-white mt-4 mb-3" style="font-size:clamp(1.6rem,4vw,2.4rem)">Simple, transparent pricing.</h2>
+      <p class="text-dim text-sm">Start free. Upgrade when you need more.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+      <!-- Free -->
+      <div class="card p-6 reveal reveal-delay-1">
+        <h3 class="font-bold text-white text-base mb-1">Free</h3>
+        <div class="text-3xl font-bold text-white mb-4">Rp0 <span class="text-dim text-sm font-normal">/forever</span></div>
+        <ul class="space-y-2.5 text-sm text-dim mb-6">
+          <li class="flex items-center gap-2"><span class="mi mi-xs text-success">check</span> <strong class="text-white">100</strong> requests/day</li>
+          <li class="flex items-center gap-2"><span class="mi mi-xs text-success">check</span> All API endpoints</li>
+          <li class="flex items-center gap-2"><span class="mi mi-xs text-success">check</span> Dashboard + Analytics</li>
+          <li class="flex items-center gap-2"><span class="mi mi-xs text-success">check</span> 2FA Email Login</li>
+          <li class="flex items-center gap-2" style="opacity:.4"><span class="mi mi-xs">close</span> Priority support</li>
+        </ul>
+        <a href="/auth/register" class="btn-secondary w-full justify-center">Get Started Free</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="card p-6 reveal reveal-delay-2" style="border-color:rgba(168,85,247,0.35);background:linear-gradient(135deg,#161616,#180d2a)">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="font-bold text-white text-base">Pro</h3>
+          <span class="badge badge-purple text-[10px]"><span class="mi mi-xs">workspace_premium</span> Popular</span>
+        </div>
+        <div class="text-3xl font-bold text-white mb-1">Rp3.000 <span class="text-dim text-sm font-normal">/7 hari</span></div>
+        <p class="text-dim text-xs mb-4">Rp5k / 14 hari · Rp10k / 30 hari</p>
+        <ul class="space-y-2.5 text-sm text-dim mb-6">
+          <li class="flex items-center gap-2"><span class="mi mi-xs text-success">check</span> <strong class="text-white">10.000</strong> requests/day</li>
+          <li class="flex items-center gap-2"><span class="mi mi-xs text-success">check</span> All API endpoints</li>
+          <li class="flex items-center gap-2"><span class="mi mi-xs text-success">check</span> Pro badge on profile</li>
+          <li class="flex items-center gap-2"><span class="mi mi-xs text-success">check</span> Quota warning emails</li>
+          <li class="flex items-center gap-2"><span class="mi mi-xs text-success">check</span> Priority via Telegram</li>
+        </ul>
+        <a href="/upgrade" class="btn-primary w-full justify-center"><span class="mi mi-sm">workspace_premium</span> Upgrade to Pro</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     FAQ
+═══════════════════════════════════════════════════════ -->
+<section class="py-24 border-b border-border bg-surface">
+  <div class="max-w-3xl mx-auto px-5">
+    <div class="text-center mb-12 reveal">
+      <span class="badge badge-white mb-4"><span class="mi mi-xs">help_outline</span> FAQ</span>
+      <h2 class="font-bold text-white mt-4" style="font-size:clamp(1.6rem,4vw,2.4rem)">Frequently Asked Questions</h2>
+    </div>
+
+    <% var faqs = [
+      {
+        q: 'Gimana cara dapet API key?',
+        a: 'Register di halaman /auth/register — gratis, langsung jadi, dan API key langsung dikirim ke email kamu. Ga perlu CC atau verifikasi apapun.'
+      },
+      {
+        q: 'Berapa batas request per hari di tier Free?',
+        a: 'Free tier mendapat 100 request per hari. Quota reset otomatis setiap tengah malam. Kalau butuh lebih, upgrade ke Pro mulai Rp3.000/7 hari.'
+      },
+      {
+        q: 'Cara upgrade ke Pro gimana?',
+        a: 'Pergi ke halaman /upgrade, pilih plan, lalu kamu akan di arahkan ke @ZarOffc di Telegram, Admin akan menjelaskan bagaimana selanjutnya. Admin akan verifikasi dan aktifkan Pro kamu dalam waktu singkat.'
+      },
+      {
+        q: 'Apakah API key bisa dipakai di banyak aplikasi sekaligus?',
+        a: 'Bisa! API key kamu bisa dipakai di bot Telegram, website, aplikasi mobile, atau tools apapun — selama total request per hari tidak melebihi limit tier kamu.'
+      },
+      {
+        q: 'Apa itu 2FA Login?',
+        a: 'Setiap kali login, sistem akan mengirim OTP 6 digit ke email kamu. Kode berlaku 5 menit. Ini untuk menjaga keamanan akun kamu secara otomatis.'
+      },
+      {
+        q: 'Apakah ada jaminan uptime?',
+        a: 'Kami menargetkan 99.9% uptime. Status real-time tiap endpoint bisa dipantau di halaman /status — lengkap dengan error rate dan response time.'
+      },
+      {
+        q: 'Gimana kalau API key bocor?',
+        a: 'Langsung regenerate API key kamu dari dashboard di /dashboard. Key lama langsung tidak berlaku, dan kamu akan dapat email notifikasi berisi key baru.'
+      },
+    ] %>
+
+    <div class="card overflow-hidden reveal reveal-delay-1">
+      <% faqs.forEach(function(faq, i) { %>
+        <div class="faq-item px-6">
+          <button type="button" class="faq-btn" data-faq="<%= i %>">
+            <span class="text-sm font-medium"><%= faq.q %></span>
+            <span class="mi mi-sm text-dim faq-icon" id="faq-icon-<%= i %>">add</span>
+          </button>
+          <div class="faq-answer" id="faq-answer-<%= i %>">
+            <p class="text-dim text-sm leading-relaxed pb-5"><%= faq.a %></p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     CTA
+═══════════════════════════════════════════════════════ -->
+<section class="py-28">
+  <div class="max-w-4xl mx-auto px-5 text-center reveal">
+    <div class="card p-12" style="background:linear-gradient(135deg,#0f0f0f,#161616);border-color:#222;position:relative;overflow:hidden">
+      <div class="absolute inset-0 grid-bg opacity-30"></div>
+      <div class="relative">
+        <h2 class="font-bold text-white mb-4" style="font-size:clamp(1.8rem,4vw,2.6rem)">
+          Start building today.
+        </h2>
+        <p class="text-dim mb-8 max-w-md mx-auto text-sm leading-relaxed">
+          Join developers who use ZarApi to power their bots, tools, and apps. Free forever — upgrade only when you're ready.
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <a href="/auth/register" class="btn-primary px-8 py-3">
+            <span class="mi mi-sm">rocket_launch</span> Get Started Free
+          </a>
+          <a href="/docs" class="btn-secondary px-8 py-3">
+            <span class="mi mi-sm">menu_book</span> Read the Docs
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
+
+<script>
+// ── Intersection Observer for scroll animations ────────────────────────────────
+(function() {
+  var els = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window)) {
+    els.forEach(function(el) { el.classList.add('visible'); });
+    return;
+  }
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var delay = entry.target.dataset.delay || 0;
+        setTimeout(function() {
+          entry.target.classList.add('visible');
+        }, parseInt(delay));
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  els.forEach(function(el) { obs.observe(el); });
+})();
+
+// ── FAQ accordion ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.faq-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var idx    = btn.dataset.faq;
+    var answer = document.getElementById('faq-answer-' + idx);
+    var icon   = document.getElementById('faq-icon-'   + idx);
+    var isOpen = answer.classList.contains('open');
+
+    // Close all
+    document.querySelectorAll('.faq-answer').forEach(function(a) { a.classList.remove('open'); });
+    document.querySelectorAll('.faq-icon').forEach(function(ic) { ic.classList.remove('open'); ic.textContent = 'add'; });
+
+    if (!isOpen) {
+      answer.classList.add('open');
+      icon.classList.add('open');
+      icon.textContent = 'add'; // stays add, rotated 45deg = X
+    }
+  });
+});
+</script>
+</body>
+</html>
