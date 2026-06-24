@@ -1,0 +1,120 @@
+<% var currentAdminPath = 'overview'; %>
+<%- include('../partials/adminhead', { title, settings, user, currentAdminPath, appSettings }) %>
+
+<div class="fade-up" style="display:flex;flex-direction:column;gap:14px">
+
+  <!-- Stats (4 on top row) -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+    <div class="stat-card">
+      <div class="stat-label"><span class="mi mi-sm">group</span> Users</div>
+      <div class="stat-val"><%= stats.totalUsers %></div>
+      <div class="stat-sub"><%= stats.proUsers %> Pro · <%= stats.activeUsers %> active</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><span class="mi mi-sm">api</span> API Calls</div>
+      <div class="stat-val"><%= stats.totalCalls %></div>
+      <div class="stat-sub"><%= stats.todayCalls %> today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><span class="mi mi-sm">workspace_premium</span> Upgrades</div>
+      <div class="stat-val" style="<%= stats.pendingUpgrades > 0 ? 'color:#fbbf24' : '' %>"><%= stats.pendingUpgrades %></div>
+      <div class="stat-sub">pending approval</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><span class="mi mi-sm">block</span> Blacklisted</div>
+      <div class="stat-val"><%= stats.blacklisted %></div>
+      <div class="stat-sub"><%= stats.activeNotifs %> active notifs</div>
+    </div>
+  </div>
+
+  <div class="grid-14col">
+    <!-- Recent logs -->
+    <div class="card">
+      <div class="card-header"><span class="mi mi-sm">history</span> Recent API Calls</div>
+      <div class="table-scroll">
+        <table class="admin-table" style="min-width:380px">
+          <thead><tr><th>User</th><th>Endpoint</th><th>Status</th><th>IP</th></tr></thead>
+          <tbody>
+            <% if (recentLogs.length === 0) { %>
+              <tr><td colspan="4" class="empty-msg">No calls yet.</td></tr>
+            <% } else { recentLogs.forEach(function(log) { %>
+              <tr>
+                <td class="mono dim"><%= log.username || '—' %></td>
+                <td class="mono truncate soft" style="max-width:150px"><%= log.endpoint %></td>
+                <td><span class="badge <%= log.status >= 200 && log.status < 300 ? 'badge-green' : 'badge-red' %>"><%= log.status %></span></td>
+                <td class="mono dim"><%= log.ip || '—' %></td>
+              </tr>
+            <% }) } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <!-- Pending upgrades -->
+      <% if (pendingUpgrades && pendingUpgrades.length > 0) { %>
+        <div class="card">
+          <div class="card-header" style="justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:8px"><span class="mi mi-sm">workspace_premium</span> Pending Upgrades</div>
+            <a href="/admin/upgrades" style="font-size:11px;color:#555;text-decoration:none">View all →</a>
+          </div>
+          <div style="padding:10px">
+            <% pendingUpgrades.forEach(function(req) { %>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 6px;border-bottom:1px solid #111">
+                <div>
+                  <span style="font-weight:600;color:#ededed;font-size:12px"><%= req.username %></span>
+                  <span class="badge badge-purple" style="font-size:10px;margin-left:6px"><%= req.plan %></span>
+                </div>
+                <div style="font-size:11px;color:#555">Rp<%= req.price.toLocaleString('id-ID') %></div>
+              </div>
+            <% }) %>
+          </div>
+          <div style="padding:10px">
+            <a href="/admin/upgrades" class="btn btn-warning" style="width:100%;justify-content:center;font-size:12px">
+              <span class="mi mi-xs">workspace_premium</span> Review Upgrades
+            </a>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Top endpoints -->
+      <div class="card">
+        <div class="card-header"><span class="mi mi-sm">trending_up</span> Top Endpoints</div>
+        <div style="padding:14px">
+          <% if (topEndpoints.length === 0) { %>
+            <p class="empty-msg">No data yet.</p>
+          <% } else { topEndpoints.forEach(function(ep, i) { %>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="mono dim" style="width:16px;font-size:10px"><%= i+1 %></span>
+              <code style="font-size:11px;color:#666;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= ep.endpoint %></code>
+              <span class="badge badge-white"><%= ep.hits %></span>
+            </div>
+          <% }) } %>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="card">
+        <div class="card-header"><span class="mi mi-sm">bolt</span> Quick Actions</div>
+        <div style="padding:10px;display:flex;flex-direction:column;gap:5px">
+          <a href="/admin/analytics"    class="btn btn-ghost" style="justify-content:flex-start;font-size:12px"><span class="mi mi-xs">bar_chart</span> View Analytics</a>
+          <a href="/admin/notifications" class="btn btn-ghost" style="justify-content:flex-start;font-size:12px"><span class="mi mi-xs">add_alert</span> New Notification</a>
+          <a href="/admin/status-overrides" class="btn btn-ghost" style="justify-content:flex-start;font-size:12px"><span class="mi mi-xs">tune</span> Status Overrides</a>
+          <a href="/status" target="_blank" class="btn btn-ghost" style="justify-content:flex-start;font-size:12px"><span class="mi mi-xs">open_in_new</span> View Status Page</a>
+          <a href="/admin/maintenance" class="btn <%= appSettings.maintenance_mode === 'true' ? 'btn-warning' : 'btn-ghost' %>" style="justify-content:flex-start;font-size:12px">
+            <span class="mi mi-xs">construction</span>
+            Maintenance <%= appSettings.maintenance_mode === 'true' ? '(ON)' : '(OFF)' %>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media(max-width:900px) { div[style*="grid-template-columns:repeat(4"] { grid-template-columns: repeat(2,1fr) !important; } }
+  @media(max-width:480px)  { div[style*="grid-template-columns:repeat(4"] { grid-template-columns: repeat(2,1fr) !important; } }
+</style>
+
+<%- include('../partials/admintail') %>
