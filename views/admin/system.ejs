@@ -1,0 +1,122 @@
+<% var currentAdminPath = 'system'; var appSettings = {}; %>
+<%- include('../partials/adminhead', { title, settings, user, currentAdminPath, appSettings }) %>
+
+<div class="fade-up" style="display:flex;flex-direction:column;gap:14px">
+
+  <!-- Stats -->
+  <div class="grid-stats">
+    <div class="stat-card">
+      <div class="stat-label"><span class="mi mi-sm">memory</span> RAM Used</div>
+      <div class="stat-val"><%= system.usedMem %> <span style="font-size:14px;color:#444">GB</span></div>
+      <div class="stat-sub">of <%= system.totalMem %> GB &mdash; <%= system.memPercent %>%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><span class="mi mi-sm">developer_board</span> CPU Cores</div>
+      <div class="stat-val"><%= system.cpuCores %></div>
+      <div class="stat-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= system.cpuModel.substring(0,28) %>...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><span class="mi mi-sm">settings</span> Node.js</div>
+      <div class="stat-val" style="font-size:18px;font-family:'JetBrains Mono',monospace"><%= system.nodeVersion %></div>
+      <div class="stat-sub">PID: <%= system.pid %></div>
+    </div>
+  </div>
+
+  <div class="grid-2col">
+    <!-- Memory & info -->
+    <div class="card">
+      <div class="card-header"><span class="mi mi-sm">memory</span> Memory Usage</div>
+      <div style="padding:18px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:11px">
+          <span class="dim">Used: <span class="soft"><%= system.usedMem %> GB</span></span>
+          <span class="dim">Free: <span class="soft"><%= system.freeMem %> GB</span></span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:<%= system.memPercent %>%;background:<%= system.memPercent > 85 ? '#ef4444' : system.memPercent > 60 ? '#f59e0b' : '#22c55e' %>"></div>
+        </div>
+        <div style="text-align:right;font-size:10px;color:#333;margin-top:4px"><%= system.memPercent %>% used</div>
+
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid #111;padding-bottom:6px">
+            <span class="dim mono">Platform</span><span class="soft mono"><%= system.platform %> / <%= system.arch %></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid #111;padding-bottom:6px">
+            <span class="dim mono">Hostname</span><span class="soft mono"><%= system.hostname %></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span class="dim mono">Process ID</span><span class="soft mono"><%= system.pid %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live monitor -->
+    <div class="card">
+      <div class="card-header" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px"><span class="mi mi-sm">monitor_heart</span> Live Monitor</div>
+        <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-family:'JetBrains Mono',monospace;color:#333">
+          <span style="width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;display:inline-block"></span>
+          5s refresh
+        </span>
+      </div>
+      <div style="padding:18px;display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px">
+            <span class="dim mono">RAM Usage</span>
+            <span class="soft" id="live-mem-pct">--</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="live-mem-bar" style="width:0%;background:#22c55e"></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span class="dim mono">Load Avg (1m)</span><span class="soft mono" id="live-load">--</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span class="dim mono">System Uptime</span><span class="soft mono" id="live-uptime">--</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span class="dim mono">App Uptime</span><span class="soft mono" id="live-node-uptime">--</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span class="dim mono">RAM Used</span><span class="soft mono" id="live-mem-used">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+<script>
+function fmtUptime(s) {
+  s = Math.floor(s);
+  var d = Math.floor(s/86400), h = Math.floor((s%86400)/3600), m = Math.floor((s%3600)/60);
+  if (d > 0) return d+'d '+h+'h '+m+'m';
+  if (h > 0) return h+'h '+m+'m';
+  return m+'m '+(s%60)+'s';
+}
+function refreshStats() {
+  fetch('/admin/api/stats')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var pct = d.mem.percent;
+      document.getElementById('live-mem-pct').textContent    = pct + '%';
+      document.getElementById('live-mem-bar').style.width    = pct + '%';
+      document.getElementById('live-mem-bar').style.background = pct > 85 ? '#ef4444' : pct > 60 ? '#f59e0b' : '#22c55e';
+      document.getElementById('live-load').textContent       = d.loadavg;
+      document.getElementById('live-uptime').textContent     = fmtUptime(d.uptime);
+      document.getElementById('live-node-uptime').textContent = fmtUptime(d.nodeUptime);
+      document.getElementById('live-mem-used').textContent   = d.mem.used + ' / ' + d.mem.total + ' GB';
+    }).catch(function(){});
+}
+document.addEventListener('DOMContentLoaded', function() {
+  refreshStats();
+  setInterval(refreshStats, 5000);
+});
+</script>
+
+<%- include('../partials/admintail') %>
