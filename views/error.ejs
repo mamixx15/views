@@ -1,0 +1,17 @@
+<%- include('partials/head', { title, settings }) %>
+<%- include('partials/navbar') %>
+<div class="min-h-[calc(100vh-130px)] flex items-center justify-center px-5">
+  <div class="text-center fade-up max-w-md">
+    <div class="w-14 h-14 rounded-full bg-danger/10 border border-danger/20 flex items-center justify-center mx-auto mb-4">
+      <span class="mi mi-lg text-danger">warning</span>
+    </div>
+    <h1 class="text-xl font-semibold text-white mb-2">Server Error</h1>
+    <p class="text-xs font-mono text-dim bg-card border border-border rounded-lg px-4 py-2.5 mb-6"><%= message || 'An unexpected error occurred.' %></p>
+    <a href="/" class="btn-primary text-sm px-5 py-2.5">
+      <span class="mi mi-sm">arrow_back</span> Go Home
+    </a>
+  </div>
+</div>
+<%- include('partials/footer') %>
+</body>
+</html>
