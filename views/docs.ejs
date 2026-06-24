@@ -1,0 +1,623 @@
+<%- include('partials/head', { title, settings }) %>
+<%- include('partials/navbar') %>
+
+<style>
+.reveal { opacity:0; transform:translateY(16px); transition:opacity .4s ease, transform .4s ease; }
+.reveal.visible { opacity:1; transform:translateY(0); }
+.reveal-delay-1 { transition-delay:.07s; }
+.reveal-delay-2 { transition-delay:.14s; }
+
+/* Endpoint card */
+.ep-card {
+  background:#0e0e0e;
+  border:1px solid #1e1e1e;
+  border-radius:10px;
+  overflow:hidden;
+  transition:border-color .15s, box-shadow .15s;
+}
+.ep-card:hover { border-color:#2a2a2a; }
+.ep-card.expanded { border-color:#2a2a2a; box-shadow:0 4px 24px rgba(0,0,0,.3); }
+
+.ep-header {
+  display:flex; align-items:center; gap:12px;
+  padding:14px 18px; cursor:pointer; user-select:none;
+}
+.ep-header:hover { background:rgba(255,255,255,.02); }
+.ep-body { border-top:1px solid #1a1a1a; padding:20px 18px; display:none; }
+
+/* Params */
+.param-label {
+  font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+  letter-spacing:.08em; text-transform:uppercase; color:#666;
+  display:flex; align-items:center; gap:5px; margin-bottom:6px;
+}
+.req-star { color:#f87171; font-size:14px; line-height:1; }
+.param-input {
+  width:100%; background:#080808; border:1px solid #222; border-radius:7px;
+  color:#e5e5e5; font-family:'JetBrains Mono',monospace; font-size:13px;
+  padding:10px 14px; outline:none; transition:border-color .15s;
+}
+.param-input::placeholder { color:#2a2a2a; }
+.param-input:focus { border-color:#3a3a3a; box-shadow:0 0 0 3px rgba(255,255,255,.04); }
+
+/* Execute */
+.exec-btn {
+  width:100%; padding:12px 16px; background:#ededed; color:#080808;
+  font-weight:700; font-size:13px; letter-spacing:.04em; text-transform:uppercase;
+  border:none; border-radius:8px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition:background .15s, transform .1s;
+}
+.exec-btn:hover { background:#fff; }
+.exec-btn:active { transform:scale(.99); }
+.exec-btn:disabled { background:#2a2a2a; color:#555; cursor:not-allowed; }
+
+.clear-btn {
+  width:100%; padding:9px; background:transparent; color:#555;
+  font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.08em;
+  text-transform:uppercase; border:1px solid #1e1e1e; border-radius:8px;
+  cursor:pointer; transition:border-color .15s, color .15s;
+}
+.clear-btn:hover { border-color:#333; color:#888; }
+
+/* Response */
+.resp-panel { background:#080808; border:1px solid #1e1e1e; border-radius:8px; overflow:hidden; margin-top:14px; display:none; }
+.resp-tabbar { display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #1a1a1a; }
+.resp-tabs { display:flex; }
+.resp-tab {
+  padding:10px 16px; font-family:'JetBrains Mono',monospace; font-size:11px;
+  font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+  color:#444; background:none; border:none; border-bottom:2px solid transparent;
+  cursor:pointer; margin-bottom:-1px; transition:color .15s, border-color .15s;
+}
+.resp-tab:hover { color:#777; }
+.resp-tab.is-active { color:#ededed; border-bottom-color:#ededed; }
+.resp-meta { display:flex; align-items:center; gap:8px; padding:0 12px; }
+.copy-res-btn { padding:5px; background:none; border:none; color:#444; cursor:pointer; border-radius:4px; display:flex; align-items:center; transition:color .15s; }
+.copy-res-btn:hover { color:#aaa; }
+.resp-pane { display:none; }
+.resp-pane.active { display:block; }
+.resp-pre { padding:16px; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.75; overflow-x:auto; max-height:320px; overflow-y:auto; white-space:pre-wrap; word-break:break-all; color:#bbb; }
+.j-key { color:#86efac; } .j-str { color:#fda4af; } .j-num { color:#fbbf24; } .j-bool { color:#60a5fa; } .j-null { color:#a78bfa; }
+.header-row { display:flex; gap:12px; padding:5px 16px; font-family:'JetBrains Mono',monospace; font-size:11px; border-bottom:1px solid #111; }
+.header-row:last-child { border-bottom:none; }
+.h-name { color:#86efac; min-width:160px; flex-shrink:0; } .h-value { color:#888; word-break:break-all; }
+
+/* Method badge */
+.method-get  { color:#4ade80; background:rgba(74,222,128,.1); border:1px solid rgba(74,222,128,.2); padding:3px 10px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; }
+.method-badge-sm { display:inline-flex; align-items:center; padding:1px 5px; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; border-radius:3px; }
+
+/* Status colors */
+.s-ok  { color:#4ade80; background:rgba(74,222,128,.1); border:1px solid rgba(74,222,128,.2); padding:2px 8px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; }
+.s-err { color:#f87171; background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.2); padding:2px 8px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; }
+
+.chev { transition:transform .2s ease; display:inline-flex; align-items:center; font-size:20px; }
+.chev.open { transform:rotate(180deg); }
+
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+
+<!-- ── DOCS HEADER ──────────────────────────────────────────────────────────── -->
+<section class="border-b border-border relative overflow-hidden">
+  <div class="absolute inset-0 grid-bg opacity-50"></div>
+  <% if (settings.bannerImage) { %>
+    <div class="absolute inset-0"><img src="<%= settings.bannerImage %>" alt="" class="w-full h-full object-cover opacity-[0.04]"/></div>
+  <% } %>
+  <div class="absolute inset-0 bg-gradient-to-b from-transparent to-bg pointer-events-none"></div>
+
+  <div class="relative max-w-6xl mx-auto px-5 py-12">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+      <div class="fade-up">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="badge badge-green text-[10px]">
+            <span class="mi" style="font-size:8px;font-variation-settings:'FILL' 1,'wght' 700,'GRAD' 0,'opsz' 20">circle</span>
+            <%= settings.header.status %>
+          </span>
+          <span class="badge badge-white text-[10px]"><%= settings.version %></span>
+        </div>
+        <h1 class="text-3xl font-bold text-white mb-2">API Reference</h1>
+        <p class="text-dim text-sm max-w-lg"><%= settings.description %></p>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="fade-up-2 flex gap-4 shrink-0">
+        <% var totalEps = 0; settings.categories.forEach(function(c){ totalEps += c.items.length; }); %>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-white"><%= totalEps %></div>
+          <div class="text-[10px] font-mono text-dim uppercase tracking-wider">Endpoints</div>
+        </div>
+        <div class="w-px bg-border"></div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-white"><%= settings.categories.length %></div>
+          <div class="text-[10px] font-mono text-dim uppercase tracking-wider">Categories</div>
+        </div>
+        <div class="w-px bg-border"></div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-success">Free</div>
+          <div class="text-[10px] font-mono text-dim uppercase tracking-wider">To Start</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Base URL pill -->
+    <div class="mt-6 fade-up-3 flex items-center gap-3 flex-wrap">
+      <span class="text-xs text-dim font-mono">Base URL:</span>
+      <code class="text-xs font-mono text-soft bg-card border border-border px-3 py-1.5 rounded-lg">
+        https://nexapi.fun/api
+      </code>
+      <span class="badge badge-white text-[10px]">REST · JSON · GET</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── AUTH INFO BANNER ────────────────────────────────────────────────────── -->
+<% if (!user) { %>
+  <div style="background:rgba(59,130,246,0.07);border-bottom:1px solid rgba(59,130,246,0.15)">
+    <div class="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
+      <p class="text-sm text-info flex items-center gap-2">
+        <span class="mi mi-sm">info</span>
+        You need a free API key to use these endpoints.
+      </p>
+      <div class="flex gap-2">
+        <a href="/auth/register" class="btn-primary text-xs px-3 py-1.5"><span class="mi mi-xs">key</span> Get Free Key</a>
+        <a href="/auth/login" class="btn-secondary text-xs px-3 py-1.5">Login</a>
+      </div>
+    </div>
+  </div>
+<% } else { %>
+  <div style="background:rgba(34,197,94,0.05);border-bottom:1px solid rgba(34,197,94,0.12)">
+    <div class="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
+<%
+const expire = user.tier_expires_at ? new Date(user.tier_expires_at) : null;
+const now = new Date();
+const daysLeft = expire ? Math.max(0, Math.ceil((expire - now) / 86400000)) : 0;
+%>
+
+<div class="text-sm text-success flex items-center gap-2 flex-wrap">
+  <span class="mi mi-sm">check_circle</span>
+
+  <span>Signed in as <strong><%= user.username %></strong></span>
+
+  <span class="badge badge-<%= user.tier === 'pro' ? 'purple' : user.tier === 'vip' ? 'yellow' : 'white' %> text-[10px]">
+    <%= user.tier.toUpperCase() %>
+  </span>
+
+  <% if (user.tier !== 'free' && expire) { %>
+    <span class="badge badge-green text-[10px]">
+      <%= daysLeft %> Days Left
+    </span>
+
+    <span class="badge badge-white text-[10px]">
+      Exp: <%= expire.toLocaleDateString('id-ID') %>
+    </span>
+  <% } %>
+</div>
+      <a href="/dashboard" class="text-xs text-dim hover:text-text transition-colors font-mono flex items-center gap-1">
+        <span class="mi mi-xs">dashboard</span> View Dashboard
+      </a>
+    </div>
+  </div>
+<% } %>
+
+<div class="max-w-6xl mx-auto px-5 py-8">
+  <div class="grid md:grid-cols-[220px_1fr] gap-8">
+
+    <!-- SIDEBAR -->
+    <aside class="hidden md:block">
+      <div class="sticky top-20 space-y-6">
+        <!-- Search hint -->
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-surface text-xs text-dim font-mono cursor-default">
+          <span class="mi mi-xs">search</span>
+          <span>Ctrl + K to search</span>
+        </div>
+
+        <!-- Category nav -->
+        <div>
+          <p class="text-[10px] font-mono text-dim uppercase tracking-widest mb-2 px-1">Categories</p>
+          <nav class="space-y-0.5" id="sidebar-nav">
+            <% settings.categories.forEach(function(cat, i) { %>
+              <a href="#cat-<%= i %>" class="flex items-center justify-between px-2 py-2 rounded-lg text-xs text-dim hover:text-text hover:bg-card transition-colors">
+                <div class="flex items-center gap-2 truncate">
+                  <span class="mi mi-xs">folder</span>
+                  <span class="truncate"><%= cat.name %></span>
+                </div>
+                <span class="text-[10px] font-mono text-muted shrink-0 ml-1"><%= cat.items.length %></span>
+              </a>
+            <% }) %>
+          </nav>
+        </div>
+
+        <!-- Quick links -->
+        <div class="border-t border-border pt-4 space-y-0.5">
+          <a href="/api/ping" target="_blank" class="flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-dim hover:text-text hover:bg-card transition-colors font-mono">
+            <span class="mi mi-xs">sensors</span> /api/ping ↗
+          </a>
+          <a href="/status" class="flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-dim hover:text-text hover:bg-card transition-colors">
+            <span class="mi mi-xs">monitor_heart</span> Status Page
+          </a>
+          <a href="/upgrade" class="flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-dim hover:text-text hover:bg-card transition-colors">
+            <span class="mi mi-xs">workspace_premium</span> Upgrade Pro
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="min-w-0 space-y-10">
+
+      <!-- Auth guide card -->
+      <div class="card p-5 reveal" style="border-color:#1e1e1e;background:linear-gradient(135deg,#0e0e0e,#110e1a)">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.2)">
+            <span class="mi mi-sm" style="color:#c084fc">vpn_key</span>
+          </div>
+          <div class="min-w-0">
+            <p class="font-semibold text-white text-sm mb-1">Authentication</p>
+            <p class="text-dim text-xs leading-relaxed mb-3">
+              All endpoints require an API key. Pass it as a query parameter or header.
+            </p>
+            <div class="grid sm:grid-cols-2 gap-2">
+              <div>
+                <p class="text-[10px] font-mono text-dim uppercase tracking-wider mb-1">Query Param</p>
+                <code class="text-xs font-mono text-soft bg-bg border border-border px-2 py-1.5 rounded-lg block">?apikey=nex_xxxxxxxx</code>
+              </div>
+              <div>
+                <p class="text-[10px] font-mono text-dim uppercase tracking-wider mb-1">Header</p>
+                <code class="text-xs font-mono text-soft bg-bg border border-border px-2 py-1.5 rounded-lg block">X-Api-Key: nex_xxxxxxxx</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+                  <!-- Search Endpoint -->
+<div class="reveal reveal-delay-1 mb-6">
+  <div class="relative">
+    <span class="mi absolute left-4 top-1/2 -translate-y-1/2 text-dim">
+      search
+    </span>
+
+    <input
+      id="endpointSearch"
+      type="text"
+      placeholder="Search endpoints..."
+      class="w-full pl-12 pr-4 py-3 rounded-xl bg-card border border-border text-sm text-white placeholder:text-dim outline-none focus:border-primary transition-all"
+    />
+  </div>
+</div>
+
+      <!-- ENDPOINT CATEGORIES -->
+      <% settings.categories.forEach(function(cat, catIdx) { %>
+        <section id="cat-<%= catIdx %>" class="reveal reveal-delay-1">
+          <!-- Category header -->
+          <div class="flex items-center gap-3 mb-4 pb-3 border-b border-border">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,255,255,.05);border:1px solid #222">
+              <span class="mi mi-xs text-dim">folder_open</span>
+            </div>
+            <div class="flex-1">
+              <h2 class="font-semibold text-white text-sm"><%= cat.name %></h2>
+              <p class="text-[10px] text-dim font-mono"><%= cat.items.length %> endpoint<%= cat.items.length !== 1 ? 's' : '' %></p>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <% cat.items.forEach(function(ep, epIdx) {
+              var C    = catIdx + '-' + epIdx;
+              var pkeys = Object.keys(ep.params || {});
+              var isMaintenance = ep.status === 'maintenance';
+            %>
+              <div class="ep-card<%= isMaintenance ? '' : '' %>" id="card-<%= C %>">
+
+                <!-- Header -->
+                <div class="ep-header<%= isMaintenance ? ' opacity-60' : '' %>" id="hdr-<%= C %>" style="<%= isMaintenance ? 'cursor:default' : '' %>">
+                  <span class="method-get shrink-0">GET</span>
+                  <code class="font-mono text-sm text-soft flex-1 truncate"><%= ep.path %></code>
+                  <span class="text-xs text-dim hidden sm:block truncate max-w-[160px]"><%= ep.name %></span>
+
+                  <% if (isMaintenance) { %>
+                    <span class="badge badge-yellow text-[10px] shrink-0" style="display:inline-flex">
+                      <span class="mi mi-xs">construction</span> maintenance
+                    </span>
+                  <% } else if (ep.status === 'ready') { %>
+                    <span class="badge badge-green text-[10px] shrink-0 hidden sm:flex">ready</span>
+                  <% } else { %>
+                    <span class="badge badge-red text-[10px] shrink-0 hidden sm:flex"><%= ep.status %></span>
+                  <% } %>
+
+                  <% if (!isMaintenance) { %>
+                    <span class="mi chev text-dim" id="chev-<%= C %>">expand_more</span>
+                  <% } %>
+                </div>
+
+                <!-- Body -->
+                <div class="ep-body" id="body-<%= C %>"
+                  data-path="<%= ep.path %>"
+                  data-keys="<%= pkeys.join(',') %>">
+
+                  <p class="text-dim text-xs leading-relaxed mb-5"><%= ep.desc %></p>
+
+                  <!-- Params -->
+                  <% if (pkeys.length > 0) { %>
+                    <div class="mb-5">
+                      <p class="text-xs font-semibold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <span class="mi mi-xs text-dim">tune</span> Request Parameters
+                      </p>
+                      <!-- Params table (desktop) -->
+                      <div class="hidden sm:block border border-border rounded-lg overflow-hidden table-scroll mb-4">
+                        <table class="w-full text-xs min-w-[360px]">
+                          <thead class="bg-surface border-b border-border">
+                            <tr>
+                              <th class="px-4 py-2.5 text-left font-mono text-dim">Param</th>
+                              <th class="px-4 py-2.5 text-left font-mono text-dim">Description</th>
+                              <th class="px-4 py-2.5 text-left font-mono text-dim">Required</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-border">
+                            <% pkeys.forEach(function(key) { var isReq = key === 'apikey'; %>
+                              <tr class="hover:bg-white/[.02]">
+                                <td class="px-4 py-2.5 font-mono text-white"><%= key %></td>
+                                <td class="px-4 py-2.5 text-dim"><%= ep.params[key] %></td>
+                                <td class="px-4 py-2.5">
+                                  <span class="badge <%= isReq ? 'badge-blue' : 'badge-white' %> text-[10px]"><%= isReq ? 'required' : 'optional' %></span>
+                                </td>
+                              </tr>
+                            <% }) %>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- Params inputs -->
+                      <div class="space-y-3">
+                        <% pkeys.forEach(function(key) { var isReq = key === 'apikey'; %>
+                          <div>
+                            <div class="param-label">
+                              <%= key %>
+                              <% if (isReq) { %><span class="req-star">*</span><% } %>
+                              <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#333;font-size:10px">— <%= isReq ? 'required' : 'optional' %></span>
+                            </div>
+                            <input
+                              type="<%= key === 'apikey' ? 'password' : 'text' %>"
+                              id="inp-<%= C %>-<%= key %>"
+                              placeholder="<%= ep.params[key] %>"
+                              class="param-input"
+                              autocomplete="off"
+                              <% if (user && key === 'apikey') { %>value="<%= user.api_key %>"<% } %>
+                            />
+                          </div>
+                        <% }) %>
+                      </div>
+                    </div>
+                  <% } %>
+
+                  <!-- Actions -->
+                  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+                    <% if (isMaintenance) { %>
+                      <div style="width:100%;padding:12px 16px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:8px">
+                        <span class="mi mi-sm" style="color:#fbbf24">construction</span>
+                        <span style="color:#fbbf24;font-size:13px;font-weight:600">Endpoint Under Maintenance</span>
+                      </div>
+                    <% } else { %>
+                      <button class="exec-btn" id="exec-<%= C %>"
+                        data-path="<%= ep.path %>"
+                        data-keys="<%= pkeys.join(',') %>">
+                        <span class="mi mi-sm">send</span> Execute Request
+                      </button>
+                      <button class="clear-btn" id="clear-<%= C %>">Clear</button>
+                    <% } %>
+                  </div>
+
+                  <!-- Response panel -->
+                  <div class="resp-panel" id="resp-<%= C %>">
+                    <div class="resp-tabbar">
+                      <div class="resp-tabs">
+                        <button class="resp-tab is-active" id="rtab-preview-<%= C %>">Preview</button>
+                        <button class="resp-tab" id="rtab-headers-<%= C %>">Headers</button>
+                        <button class="resp-tab" id="rtab-curl-<%= C %>">Curl</button>
+                      </div>
+                      <div class="resp-meta">
+                        <button class="copy-res-btn" id="copybtn-<%= C %>">
+                          <span class="mi" id="copy-ico-<%= C %>" style="font-size:16px">content_copy</span>
+                        </button>
+                        <span id="sbadge-<%= C %>"></span>
+                        <span class="text-[11px] font-mono text-dim" id="stime-<%= C %>"></span>
+                      </div>
+                    </div>
+                    <div class="resp-pane active" id="rpane-preview-<%= C %>">
+                      <div class="resp-pre" id="rpre-<%= C %>"></div>
+                    </div>
+                    <div class="resp-pane" id="rpane-headers-<%= C %>">
+                      <div id="rheaders-<%= C %>" style="padding:8px 0;max-height:300px;overflow-y:auto"></div>
+                    </div>
+                    <div class="resp-pane" id="rpane-curl-<%= C %>">
+                      <div id="rcurl-<%= C %>" style="padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#888;white-space:pre;overflow-x:auto;max-height:300px"></div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </section>
+      <% }) %>
+
+    </main>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+// ── Scroll reveal ────────────────────────────────────────────────────────────
+(function() {
+  var els = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window)) { els.forEach(function(e){e.classList.add('visible');}); return; }
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) { entry.target.classList.add('visible'); obs.unobserve(entry.target); }
+    });
+  }, { threshold:0.1, rootMargin:'0px 0px -30px 0px' });
+  els.forEach(function(e) { obs.observe(e); });
+})();
+
+// ── JSON highlight ────────────────────────────────────────────────────────────
+function hlJson(raw) {
+  if (!raw || !raw.trim()) return '<span style="color:#555">(empty response)</span>';
+  var esc = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  if (raw.trim()[0] !== '{' && raw.trim()[0] !== '[') return esc;
+  try {
+    var s = JSON.stringify(JSON.parse(raw), null, 2).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(m) {
+      if (/^"/.test(m) && /:$/.test(m)) return '<span class="j-key">'+m+'</span>';
+      if (/^"/.test(m)) return '<span class="j-str">'+m+'</span>';
+      if (/true|false/.test(m)) return '<span class="j-bool">'+m+'</span>';
+      if (/null/.test(m)) return '<span class="j-null">'+m+'</span>';
+      return '<span class="j-num">'+m+'</span>';
+    });
+  } catch(e) { return esc; }
+}
+
+// ── Response tabs ─────────────────────────────────────────────────────────────
+function switchRTab(C, tab) {
+  ['preview','headers','curl'].forEach(function(t) {
+    document.getElementById('rpane-'+t+'-'+C).classList.toggle('active', t===tab);
+    document.getElementById('rtab-'+t+'-'+C).classList.toggle('is-active', t===tab);
+  });
+}
+
+const endpointSearch = document.getElementById('endpointSearch');
+
+if (endpointSearch) {
+  endpointSearch.addEventListener('input', function () {
+    const keyword = this.value.toLowerCase().trim();
+
+    document.querySelectorAll('.ep-card').forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = text.includes(keyword) ? '' : 'none';
+    });
+
+    document.querySelectorAll('section[id^="cat-"]').forEach(section => {
+      const cards = [...section.querySelectorAll('.ep-card')];
+      const visible = cards.some(c => c.style.display !== 'none');
+      section.style.display = visible ? '' : 'none';
+    });
+  });
+}
+
+// ── Copy ──────────────────────────────────────────────────────────────────────
+function doCopy(text, cb) {
+  if (window.isSecureContext && navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(cb).catch(function(){fbCopy(text,cb);});
+  } else { fbCopy(text,cb); }
+}
+function fbCopy(text, cb) {
+  var ta = document.createElement('textarea'); ta.value=text;
+  ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta);
+  ta.select(); try{document.execCommand('copy');if(cb)cb();}catch(e){} document.body.removeChild(ta);
+}
+
+// ── Wire all events after DOM ready ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Accordion
+  document.querySelectorAll('[id^="hdr-"]').forEach(function(hdr) {
+    var C    = hdr.id.replace('hdr-','');
+    var chev = document.getElementById('chev-'+C);
+    if (!chev) return; // maintenance
+    var body = document.getElementById('body-'+C);
+    var card = document.getElementById('card-'+C);
+    hdr.addEventListener('click', function() {
+      var open = body.style.display === 'block';
+      body.style.display = open ? 'none' : 'block';
+      chev.classList.toggle('open', !open);
+      card.classList.toggle('expanded', !open);
+    });
+  });
+
+  // Execute
+  document.querySelectorAll('.exec-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var C     = btn.id.replace('exec-','');
+      var path  = btn.dataset.path;
+      var keys  = btn.dataset.keys ? btn.dataset.keys.split(',').filter(Boolean) : [];
+      var qs    = [];
+      keys.forEach(function(key) {
+        var el = document.getElementById('inp-'+C+'-'+key);
+        if (el && el.value.trim()) qs.push(encodeURIComponent(key)+'='+encodeURIComponent(el.value.trim()));
+      });
+      var url   = path + (qs.length ? '?'+qs.join('&') : '');
+      var respEl = document.getElementById('resp-'+C);
+      btn.disabled = true;
+      btn.innerHTML = '<svg style="width:15px;height:15px;animation:spin .8s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Sending...';
+      var t0 = Date.now();
+      fetch(url).then(function(res) {
+        var elapsed = Date.now()-t0;
+        return res.text().then(function(raw) {
+          respEl.style.display = 'block';
+          document.getElementById('rpre-'+C).innerHTML = hlJson(raw);
+          var badge = document.getElementById('sbadge-'+C);
+          badge.className = res.ok ? 's-ok' : 's-err';
+          badge.textContent = res.status + (res.ok ? ' OK' : ' ERR');
+          document.getElementById('stime-'+C).textContent = elapsed+'ms';
+          var hDiv = document.getElementById('rheaders-'+C);
+          hDiv.innerHTML = '';
+          res.headers.forEach(function(v,n){ hDiv.innerHTML += '<div class="header-row"><span class="h-name">'+n+'</span><span class="h-value">'+v+'</span></div>'; });
+          if (!hDiv.innerHTML) hDiv.innerHTML = '<div class="header-row"><span style="color:#444">No headers.</span></div>';
+          document.getElementById('rcurl-'+C).textContent = 'curl -X GET \\\n  "'+window.location.origin+url+'"';
+          switchRTab(C, 'preview');
+          if (!res.ok) {
+            var msg = raw; try { msg = JSON.parse(raw).message || raw; } catch(e){}
+            Swal.fire({toast:true,position:'top-end',timer:3000,showConfirmButton:false,icon:'error',title:msg,background:'#161616',color:'#ededed',iconColor:'#ef4444'});
+          }
+        });
+      }).catch(function(err) {
+        respEl.style.display = 'block';
+        document.getElementById('rpre-'+C).innerHTML = '<span style="color:#f87171">'+err.message+'</span>';
+        Swal.fire({toast:true,position:'top-end',timer:3000,showConfirmButton:false,icon:'error',title:'Cannot reach server.',background:'#161616',color:'#ededed',iconColor:'#ef4444'});
+      }).finally(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="mi mi-sm">send</span> Execute Request';
+      });
+    });
+  });
+
+  // Clear
+  document.querySelectorAll('.clear-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var C = btn.id.replace('clear-','');
+      document.getElementById('resp-'+C).style.display = 'none';
+      ['rpre-','rbadge-','stime-'].forEach(function(p){ var el=document.getElementById(p+C); if(el)el.textContent=''; });
+      document.getElementById('rpre-'+C).innerHTML = '';
+      var sb = document.getElementById('sbadge-'+C); if(sb) sb.textContent = '';
+      document.getElementById('stime-'+C).textContent = '';
+    });
+  });
+
+  // Response tabs
+  document.querySelectorAll('.resp-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var raw = tab.id;
+      var first = raw.indexOf('-')+1;
+      var second = raw.indexOf('-',first)+1;
+      var tabName = raw.slice(first, second-1);
+      var C = raw.slice(second);
+      switchRTab(C, tabName);
+    });
+  });
+
+  // Copy response
+  document.querySelectorAll('.copy-res-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var C = btn.id.replace('copybtn-','');
+      var text = document.getElementById('rpre-'+C).textContent;
+      var ico  = document.getElementById('copy-ico-'+C);
+      doCopy(text, function() {
+        ico.textContent = 'check';
+        setTimeout(function(){ico.textContent='content_copy';},2000);
+        Swal.fire({toast:true,position:'top-end',timer:1500,showConfirmButton:false,icon:'success',title:'Copied!',background:'#161616',color:'#ededed',iconColor:'#22c55e'});
+      });
+    });
+  });
+
+});
+</script>
+</body>
+</html>
