@@ -1,0 +1,390 @@
+<%- include('partials/head', { title, settings }) %>
+<%- include('partials/navbar') %>
+
+<div class="max-w-6xl mx-auto px-5 py-10">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-8 fade-up">
+    <div>
+      <p class="text-xs font-mono text-dim mb-1 flex items-center gap-1.5"><span class="mi mi-xs">dashboard</span> Dashboard</p>
+      <h1 class="text-2xl font-bold text-white">
+        Hey, <span class="text-soft"><%= user.username %></span>
+        <% if (user.tier === 'pro') { %>
+          <span class="badge badge-purple ml-2 align-middle"><span class="mi mi-xs">workspace_premium</span> Pro</span>
+        <% } %>
+      </h1>
+    </div>
+    <div class="flex gap-2">
+      <% if (user.role === 'admin') { %>
+        <a href="/admin" class="btn-secondary text-xs px-3 py-2">
+          <span class="mi mi-xs">admin_panel_settings</span> Admin
+        </a>
+      <% } %>
+      <% if (user.tier !== 'pro') { %>
+        <a href="/upgrade" class="btn-primary text-xs px-3 py-2">
+          <span class="mi mi-xs">workspace_premium</span> Upgrade Pro
+        </a>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <% if (notifs && notifs.length > 0) { %>
+    <div class="space-y-2 mb-6 fade-up">
+      <% notifs.forEach(function(n) {
+        var colors = { info:'rgba(59,130,246,0.08)', warning:'rgba(251,191,36,0.08)', success:'rgba(34,197,94,0.08)', danger:'rgba(239,68,68,0.08)' };
+        var borders = { info:'rgba(59,130,246,0.2)', warning:'rgba(251,191,36,0.2)', success:'rgba(34,197,94,0.2)', danger:'rgba(239,68,68,0.2)' };
+        var textColors = { info:'#60a5fa', warning:'#fbbf24', success:'#22c55e', danger:'#f87171' };
+        var icons = { info:'info', warning:'warning', success:'check_circle', danger:'error' };
+      %>
+        <div style="border:1px solid <%= borders[n.type]||borders.info %>;background:<%= colors[n.type]||colors.info %>;border-radius:8px;padding:12px 16px;display:flex;align-items:flex-start;gap:10px">
+          <span class="mi mi-sm shrink-0 mt-0.5" style="color:<%= textColors[n.type]||textColors.info %>"><%= icons[n.type]||'info' %></span>
+          <div>
+            <p class="text-sm font-semibold text-white"><%= n.title %></p>
+            <p class="text-xs text-dim mt-0.5"><%= n.message %></p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- Pro Expiry Warning Banner -->
+  <% if (user.tier === 'pro' && typeof daysUntilExpiry !== 'undefined' && daysUntilExpiry !== null && daysUntilExpiry <= 3) { %>
+    <div class="mb-4 rounded-xl border px-5 py-4 flex items-center justify-between gap-4 flex-wrap"
+      style="<%= daysUntilExpiry <= 1 ? 'background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.25)' : 'background:rgba(251,191,36,0.07);border-color:rgba(251,191,36,0.25)' %>">
+      <div class="flex items-center gap-3">
+        <span class="mi mi-md" style="color:<%= daysUntilExpiry <= 1 ? '#f87171' : '#fbbf24' %>">
+          <%= daysUntilExpiry <= 1 ? 'error' : 'warning' %>
+        </span>
+        <div>
+          <p class="text-sm font-semibold text-white">
+            Pro expires in <strong style="color:<%= daysUntilExpiry <= 1 ? '#f87171' : '#fbbf24' %>"><%= daysUntilExpiry %> day<%= daysUntilExpiry !== 1 ? 's' : '' %></strong>
+          </p>
+          <p class="text-xs text-dim mt-0.5">
+            Renew now to keep 10,000 req/day. Expires: <%= new Date(user.tier_expires_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) %>
+          </p>
+        </div>
+      </div>
+      <a href="/upgrade" class="btn-primary text-xs px-4 py-2 shrink-0">
+        <span class="mi mi-xs">workspace_premium</span> Renew Pro
+      </a>
+    </div>
+  <% } %>
+
+  <!-- Stats row -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4 fade-up">
+    <div class="card p-4">
+      <div class="flex items-center gap-2 mb-2"><span class="mi mi-sm text-dim">api</span><span class="text-xs text-dim">Total Calls</span></div>
+      <div class="text-2xl font-bold text-white"><%= totalCalls %></div>
+    </div>
+    <div class="card p-4">
+      <div class="flex items-center gap-2 mb-2"><span class="mi mi-sm text-dim">today</span><span class="text-xs text-dim">Today</span></div>
+      <div class="text-2xl font-bold text-white" id="stat-today">--</div>
+    </div>
+    <div class="card p-4">
+      <div class="flex items-center gap-2 mb-2"><span class="mi mi-sm text-dim">check_circle</span><span class="text-xs text-dim">Success Rate</span></div>
+      <div class="text-2xl font-bold text-white" id="stat-success">--</div>
+    </div>
+    <div class="card p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="mi mi-sm text-dim">data_usage</span>
+        <span class="text-xs text-dim">Daily Quota</span>
+      </div>
+      <div class="text-2xl font-bold text-white"><%= quota %><span class="text-sm text-dim">/<%= limit %></span></div>
+      <% var quotaPct = Math.min(Math.round((quota/limit)*100), 100); %>
+      <div class="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+        <div class="h-full rounded-full transition-all" style="width:<%= quotaPct %>%;background:<%= quotaPct > 90 ? '#ef4444' : quotaPct > 70 ? '#f59e0b' : '#22c55e' %>"></div>
+      </div>
+      <% if (user.tier === 'free') { %>
+        <a href="/upgrade" class="text-[10px] text-dim hover:text-white transition-colors mt-1 inline-flex items-center gap-1">
+          <span class="mi" style="font-size:11px">workspace_premium</span> Upgrade for more
+        </a>
+      <% } else { %>
+        <p class="text-[10px] text-success mt-1">Pro — resets daily</p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 fade-up-2">
+
+    <!-- Calls per day chart (spans 2 cols) -->
+    <div class="card p-5 lg:col-span-2">
+      <p class="text-xs font-mono text-dim uppercase tracking-widest mb-4 flex items-center gap-1.5">
+        <span class="mi mi-xs">show_chart</span> Calls — Last 7 Days
+      </p>
+      <div style="height:180px;position:relative">
+        <canvas id="chart-calls-day"></canvas>
+      </div>
+    </div>
+
+    <!-- Doughnut: success vs error -->
+    <div class="card p-5">
+      <p class="text-xs font-mono text-dim uppercase tracking-widest mb-4 flex items-center gap-1.5">
+        <span class="mi mi-xs">donut_large</span> Success Rate
+      </p>
+      <div style="height:140px;position:relative;margin-bottom:12px">
+        <canvas id="chart-sve"></canvas>
+      </div>
+      <div class="flex justify-center gap-4 text-xs">
+        <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-success"></span><span class="text-dim">Success</span></div>
+        <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-danger"></span><span class="text-dim">Errors</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Key + Top endpoints + Logs -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 fade-up-3">
+
+    <!-- API Key -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-xs font-mono text-dim uppercase tracking-widest flex items-center gap-1.5"><span class="mi mi-xs">vpn_key</span> API Key</p>
+        <span class="badge badge-green text-[10px]">Active</span>
+      </div>
+      <div class="flex items-center gap-2 bg-bg border border-border rounded-lg px-3 py-2.5 mb-3">
+        <code id="api-key-val" class="font-mono text-xs text-soft flex-1 truncate select-all"><%= user.api_key %></code>
+        <button id="copy-btn" type="button" class="btn-secondary text-xs px-2 py-1 shrink-0">
+          <span class="mi" style="font-size:14px" id="copy-icon">content_copy</span>
+          <span id="copy-label">Copy</span>
+        </button>
+      </div>
+      <form action="/profile/regenerate-key" method="POST" id="regen-form">
+        <button id="regen-btn" type="button" class="btn-danger w-full justify-center text-xs py-2">
+          <span class="mi mi-xs">refresh</span> Regenerate
+        </button>
+      </form>
+    </div>
+
+    <!-- Top endpoints bar chart -->
+    <div class="card p-5">
+      <p class="text-xs font-mono text-dim uppercase tracking-widest mb-4 flex items-center gap-1.5">
+        <span class="mi mi-xs">bar_chart</span> Top Endpoints
+      </p>
+      <div style="height:160px;position:relative">
+        <canvas id="chart-endpoints"></canvas>
+      </div>
+    </div>
+
+    <!-- Quick nav -->
+    <div class="card p-5">
+      <p class="text-xs font-mono text-dim uppercase tracking-widest mb-4 flex items-center gap-1.5"><span class="mi mi-xs">apps</span> Quick Links</p>
+      <nav class="space-y-1">
+        <a href="/docs"    class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface transition-colors text-dim hover:text-text"><span class="mi mi-sm">menu_book</span><span class="text-sm">API Docs</span></a>
+        <a href="/status"  class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface transition-colors text-dim hover:text-text"><span class="mi mi-sm">monitor_heart</span><span class="text-sm">Status Page</span></a>
+        <a href="/upgrade" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface transition-colors text-dim hover:text-text"><span class="mi mi-sm">workspace_premium</span><span class="text-sm">Upgrade Pro</span></a>
+        <a href="/api/ping" target="_blank" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface transition-colors text-dim hover:text-text"><span class="mi mi-sm">sensors</span><span class="text-sm">Ping Server</span></a>
+        <a href="#" id="logout-link" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface transition-colors text-dim hover:text-danger"><span class="mi mi-sm">logout</span><span class="text-sm">Sign Out</span></a>
+        <form action="/auth/logout" method="POST" id="logout-form" class="hidden"></form>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Recent Logs -->
+  <div class="mt-4 fade-up-3">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-xs font-mono text-dim uppercase tracking-widest flex items-center gap-1.5"><span class="mi mi-xs">history</span> Recent Calls</p>
+      <span class="badge badge-white text-[10px]">Last 50</span>
+    </div>
+    <% if (logs.length === 0) { %>
+      <div class="card p-10 text-center">
+        <span class="mi mi-lg text-muted block mb-2">inbox</span>
+        <p class="text-dim text-sm">No API calls yet. <a href="/docs" class="text-soft hover:text-white">Try an endpoint →</a></p>
+      </div>
+    <% } else { %>
+      <div class="card overflow-hidden">
+        <div class="table-scroll">
+          <table class="w-full text-xs min-w-[400px]">
+            <thead class="bg-surface border-b border-border">
+              <tr>
+                <th class="px-4 py-3 text-left font-mono text-dim">Endpoint</th>
+                <th class="px-4 py-3 text-left font-mono text-dim">Status</th>
+                <th class="px-4 py-3 text-left font-mono text-dim">Time</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <% logs.slice(0,15).forEach(function(log) { %>
+                <tr class="hover:bg-white/[0.015] transition-colors">
+                  <td class="px-4 py-2.5 font-mono text-soft truncate max-w-[200px]"><%= log.endpoint %></td>
+                  <td class="px-4 py-2.5"><span class="badge text-[10px] <%= log.status >= 200 && log.status < 300 ? 'badge-green' : 'badge-red' %>"><%= log.status %></span></td>
+                  <td class="px-4 py-2.5 font-mono text-dim whitespace-nowrap"><%= new Date(log.created_at).toLocaleTimeString() %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+<script>
+(function() {
+  // ── Chart defaults ──────────────────────────────────────────────────────────
+  Chart.defaults.color = '#737373';
+  Chart.defaults.font.family = "'JetBrains Mono', monospace";
+  Chart.defaults.font.size   = 11;
+
+  var lineChart, doughnutChart, barChart;
+
+  // ── Load analytics data ─────────────────────────────────────────────────────
+  fetch('/analytics/data')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      // Stat cards
+      document.getElementById('stat-today').textContent   = d.todayCalls;
+      var total  = (d.successVsError.success || 0) + (d.successVsError.errors || 0);
+      var pct    = total > 0 ? Math.round((d.successVsError.success / total) * 100) : 0;
+      document.getElementById('stat-success').textContent = pct + '%';
+
+      // Calls per day line chart
+      var ctx1 = document.getElementById('chart-calls-day').getContext('2d');
+      lineChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: d.callsPerDay.labels,
+          datasets: [{
+            label: 'Calls',
+            data: d.callsPerDay.data,
+            borderColor: '#ffffff',
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            borderWidth: 2,
+            pointBackgroundColor: '#ffffff',
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            fill: true,
+            tension: 0.4,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: '#1a1a1a' }, ticks: { color: '#555' } },
+            y: { grid: { color: '#1a1a1a' }, ticks: { color: '#555', stepSize: 1 }, beginAtZero: true },
+          }
+        }
+      });
+
+      // Success vs error doughnut
+      var ctx2 = document.getElementById('chart-sve').getContext('2d');
+      doughnutChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Success', 'Errors'],
+          datasets: [{
+            data: [d.successVsError.success || 0, d.successVsError.errors || 0],
+            backgroundColor: ['rgba(34,197,94,0.8)', 'rgba(239,68,68,0.7)'],
+            borderColor: ['#166534', '#991b1b'],
+            borderWidth: 1,
+            hoverOffset: 4,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: { legend: { display: false } },
+        }
+      });
+
+      // Top endpoints bar chart
+      var ctx3 = document.getElementById('chart-endpoints').getContext('2d');
+      barChart = new Chart(ctx3, {
+        type: 'bar',
+        data: {
+          labels: d.byEndpoint.labels,
+          datasets: [{
+            label: 'Calls',
+            data: d.byEndpoint.data,
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            borderColor: 'rgba(255,255,255,0.3)',
+            borderWidth: 1,
+            borderRadius: 4,
+            hoverBackgroundColor: 'rgba(255,255,255,0.2)',
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: '#1a1a1a' }, ticks: { color: '#555' }, beginAtZero: true },
+            y: { grid: { color: 'transparent' }, ticks: { color: '#888' } },
+          }
+        }
+      });
+    })
+    .catch(function() {
+      document.getElementById('stat-today').textContent   = '—';
+      document.getElementById('stat-success').textContent = '—';
+    });
+
+  // ── Button listeners ────────────────────────────────────────────────────────
+  function fbCopy(text, cb) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); if(cb) cb(); } catch(e) {}
+    document.body.removeChild(ta);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+      Swal.fire({ toast:true, position:'top-end', timer:4000, showConfirmButton:false, icon:'success', title:'<%- success[0] %>', background:'#161616', color:'#ededed', iconColor:'#22c55e' });
+    <% } %>
+    <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+      Swal.fire({ toast:true, position:'top-end', timer:4000, showConfirmButton:false, icon:'error', title:'<%- error[0] %>', background:'#161616', color:'#ededed', iconColor:'#ef4444' });
+    <% } %>
+
+    var copyBtn = document.getElementById('copy-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function() {
+        var key = document.getElementById('api-key-val').textContent.trim();
+        var done = function() {
+          document.getElementById('copy-label').textContent = 'Copied!';
+          document.getElementById('copy-icon').textContent  = 'check';
+          Swal.fire({ toast:true, position:'top-end', timer:2000, showConfirmButton:false, icon:'success', title:'API Key copied!', background:'#161616', color:'#ededed', iconColor:'#22c55e' });
+          setTimeout(function() { document.getElementById('copy-label').textContent = 'Copy'; document.getElementById('copy-icon').textContent = 'content_copy'; }, 2000);
+        };
+        if (window.isSecureContext && navigator.clipboard) {
+          navigator.clipboard.writeText(key).then(done).catch(function() { fbCopy(key, done); });
+        } else { fbCopy(key, done); }
+      });
+    }
+
+    var regenBtn = document.getElementById('regen-btn');
+    if (regenBtn) {
+      regenBtn.addEventListener('click', function() {
+        Swal.fire({
+          title:'Regenerate API Key?',
+          html:'<span style="font-size:12px;color:#737373">Your current key will be <b style="color:#f87171">immediately invalidated</b>.</span>',
+          icon:'warning', background:'#161616', color:'#ededed', iconColor:'#ef4444',
+          showCancelButton:true, confirmButtonColor:'#ef4444', cancelButtonColor:'#1f1f1f',
+          confirmButtonText:'<span style="font-size:13px;font-weight:600">Yes, regenerate</span>',
+          cancelButtonText:'<span style="font-size:13px">Cancel</span>',
+        }).then(function(r) { if(r.isConfirmed) document.getElementById('regen-form').submit(); });
+      });
+    }
+
+    var logoutLink = document.getElementById('logout-link');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        Swal.fire({
+          title:'Sign out?', icon:'question', background:'#161616', color:'#ededed', iconColor:'#fff',
+          showCancelButton:true, confirmButtonColor:'#fff', cancelButtonColor:'#242424',
+          confirmButtonText:'<span style="color:#080808;font-weight:600;font-size:13px">Sign out</span>',
+          cancelButtonText:'<span style="font-size:13px">Cancel</span>',
+        }).then(function(r) { if(r.isConfirmed) document.getElementById('logout-form').submit(); });
+      });
+    }
+  });
+})();
+</script>
+</body>
+</html>
