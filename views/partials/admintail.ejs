@@ -1,0 +1,76 @@
+  </div><!-- /page-content -->
+</div><!-- /main-wrap -->
+
+<!-- SweetAlert2 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.12.4/sweetalert2.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.12.4/sweetalert2.all.min.js"></script>
+<style>
+  .swal2-popup {
+    background: #111 !important; border: 1px solid #222 !important;
+    border-radius: 10px !important; box-shadow: 0 20px 40px rgba(0,0,0,.7) !important;
+    font-family: 'Inter', sans-serif !important; padding: 22px !important;
+  }
+  .swal2-title { color: #ededed !important; font-size: 14px !important; font-weight: 600 !important; }
+  .swal2-html-container { color: #555 !important; font-size: 12px !important; }
+  .swal2-confirm { border-radius: 6px !important; font-size: 12px !important; font-weight: 600 !important; }
+  .swal2-cancel { border-radius: 6px !important; font-size: 12px !important; background: #1a1a1a !important; color: #888 !important; border: 1px solid #222 !important; }
+  .swal2-cancel:hover { background: #222 !important; }
+  .swal2-input, .swal2-textarea, .swal2-select {
+    background: #0a0a0a !important; border: 1px solid #222 !important;
+    border-radius: 6px !important; color: #ededed !important;
+    font-family: 'Inter', sans-serif !important; font-size: 12px !important;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // ── Sidebar toggle (mobile) ────────────────────────────────────────────
+  var sidebar  = document.getElementById('sidebar');
+  var overlay  = document.getElementById('sidebar-overlay');
+  var hamburger = document.getElementById('hamburger-btn');
+  var closeBtn  = document.getElementById('sidebar-close');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  if (hamburger) hamburger.addEventListener('click', openSidebar);
+  if (closeBtn)  closeBtn.addEventListener('click', closeSidebar);
+  if (overlay)   overlay.addEventListener('click', closeSidebar);
+
+  // Close sidebar on nav link click (mobile)
+  document.querySelectorAll('.nav-link').forEach(function(link) {
+    link.addEventListener('click', function() {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+
+  // ── Logout ────────────────────────────────────────────────────────────
+  var ll = document.getElementById('admin-logout-link');
+  if (ll) {
+    ll.addEventListener('click', function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Sign out?', icon: 'question',
+        background: '#111', color: '#ededed', iconColor: '#fff',
+        showCancelButton: true, confirmButtonColor: '#fff', cancelButtonColor: '#1a1a1a',
+        confirmButtonText: '<span style="color:#080808;font-weight:600;font-size:12px">Sign out</span>',
+        cancelButtonText:  '<span style="font-size:12px">Cancel</span>',
+      }).then(function(r) {
+        if (r.isConfirmed) document.getElementById('admin-logout-form').submit();
+      });
+    });
+  }
+
+});
+</script>
+</body>
+</html>
