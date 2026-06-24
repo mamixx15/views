@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= title %> | ZarApi Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: #080808;
+      color: #ededed;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .mi {
+      font-family: 'Material Symbols Rounded';
+      font-style: normal;
+      font-weight: normal;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+      user-select: none;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .mi-xs { font-size: 14px; }
+    .mi-sm { font-size: 16px; }
+    .mi-md { font-size: 20px; }
+    .mi-lg { font-size: 24px; }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #222; border-radius: 99px; }
+
+    /* ── Sidebar ─────────────────────────────────────────────────────────── */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 230px;
+      height: 100vh;
+      background: #060606;
+      border-right: 1px solid #181818;
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+      transition: transform 0.25s ease;
+    }
+    /* Mobile: hidden by default */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+    }
+
+    /* Overlay (mobile only) */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 49;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-overlay.show { display: block; }
+
+    .sidebar-logo {
+      padding: 14px 16px;
+      border-bottom: 1px solid #181818;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .sidebar-logo-icon {
+      width: 30px; height: 30px;
+      background: #fff;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar-nav {
+      padding: 10px 8px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .nav-section {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #252525;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: 4px 8px;
+      margin: 10px 0 4px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      border-radius: 7px;
+      color: #555;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: all .15s;
+      margin-bottom: 1px;
+    }
+    .nav-link:hover { background: #111; color: #aaa; }
+    .nav-link.active { background: #141414; color: #fff; border-color: #202020; }
+    .nav-link .mi { font-size: 17px; }
+
+    .sidebar-footer {
+      padding: 10px;
+      border-top: 1px solid #181818;
+      flex-shrink: 0;
+    }
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #0f0f0f;
+      border-radius: 8px;
+      border: 1px solid #1a1a1a;
+    }
+    .user-avatar {
+      width: 28px; height: 28px;
+      background: #181818;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Main layout ────────────────────────────────────────────────────── */
+    .main-wrap {
+      margin-left: 230px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: margin-left 0.25s ease;
+    }
+    @media (max-width: 768px) {
+      .main-wrap { margin-left: 0; }
+    }
+
+    /* ── Topbar ─────────────────────────────────────────────────────────── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      height: 52px;
+      background: #080808;
+      border-bottom: 1px solid #181818;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      gap: 12px;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+    .hamburger {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 34px; height: 34px;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 7px;
+      cursor: pointer;
+      color: #888;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .hamburger:hover { border-color: #333; color: #fff; }
+    @media (max-width: 768px) { .hamburger { display: flex; } }
+
+    /* ── Page content ───────────────────────────────────────────────────── */
+    .page-content { padding: 20px; flex: 1; }
+    @media (max-width: 640px) { .page-content { padding: 14px; } }
+
+    /* ── Components ────────────────────────────────────────────────────── */
+    .card { background: #0e0e0e; border: 1px solid #1a1a1a; border-radius: 9px; overflow: hidden; }
+    .card-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 12px; font-weight: 600; color: #ededed;
+    }
+
+    .stat-card { background: #0e0e0e; border: 1px solid #1a1a1a; border-radius: 9px; padding: 16px 18px; }
+    .stat-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: .06em; color: #3a3a3a; margin-bottom: 8px; }
+    .stat-val { font-size: 26px; font-weight: 700; color: #fff; line-height: 1; }
+    .stat-sub { font-size: 11px; color: #3a3a3a; margin-top: 4px; }
+
+    .badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; font-size: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 600; border-radius: 4px; border: 1px solid; }
+    .badge-green  { color: #22c55e; border-color: #166534; background: rgba(34,197,94,.08); }
+    .badge-red    { color: #f87171; border-color: #991b1b; background: rgba(239,68,68,.08); }
+    .badge-blue   { color: #60a5fa; border-color: #1d4ed8; background: rgba(59,130,246,.08); }
+    .badge-white  { color: #aaa;    border-color: #222;    background: #111; }
+    .badge-yellow { color: #fbbf24; border-color: #92400e; background: rgba(251,191,36,.08); }
+
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; transition: all .15s; font-family: 'Inter', sans-serif; white-space: nowrap; }
+    .btn-white   { background: #fff; color: #080808; } .btn-white:hover { opacity: .88; }
+    .btn-ghost   { background: transparent; color: #666; border: 1px solid #1e1e1e; } .btn-ghost:hover { border-color: #333; color: #ededed; }
+    .btn-danger  { background: rgba(239,68,68,.1); color: #f87171; border: 1px solid rgba(239,68,68,.25); } .btn-danger:hover  { background: rgba(239,68,68,.18); }
+    .btn-success { background: rgba(34,197,94,.1);  color: #4ade80; border: 1px solid rgba(34,197,94,.25);  } .btn-success:hover { background: rgba(34,197,94,.18); }
+    .btn-warning { background: rgba(251,191,36,.1); color: #fbbf24; border: 1px solid rgba(251,191,36,.25); } .btn-warning:hover { background: rgba(251,191,36,.18); }
+
+    .inp { width: 100%; background: #090909; border: 1px solid #1e1e1e; border-radius: 6px; color: #ededed; font-family: 'Inter', sans-serif; font-size: 12px; padding: 8px 11px; outline: none; transition: border-color .15s; }
+    .inp:focus { border-color: #2a2a2a; box-shadow: 0 0 0 3px rgba(255,255,255,.04); }
+    .inp::placeholder { color: #252525; }
+    select.inp { cursor: pointer; }
+    textarea.inp { resize: vertical; min-height: 80px; }
+
+    .admin-table { width: 100%; font-size: 11px; border-collapse: collapse; }
+    .admin-table th { padding: 9px 14px; text-align: left; font-family: 'JetBrains Mono', monospace; color: #3a3a3a; font-weight: 500; background: #090909; border-bottom: 1px solid #1a1a1a; white-space: nowrap; }
+    .admin-table td { padding: 9px 14px; border-bottom: 1px solid #111; vertical-align: middle; }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: #0f0f0f; }
+
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll::-webkit-scrollbar { height: 3px; }
+
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .dim  { color: #444; }
+    .soft { color: #888; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .empty-msg { color: #333; font-size: 12px; text-align: center; padding: 24px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    .form-label { display: block; font-size: 10px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: .06em; color: #3a3a3a; margin-bottom: 5px; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation: fadeUp .3s ease both; }
+
+    .progress-track { background: #181818; border-radius: 99px; height: 6px; overflow: hidden; }
+    .progress-fill  { height: 100%; border-radius: 99px; transition: width .4s ease; }
+
+    /* Responsive grid helpers */
+    .grid-stats  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .grid-2col   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-14col  { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
+    @media (max-width: 900px) {
+      .grid-stats { grid-template-columns: repeat(2, 1fr); }
+      .grid-2col  { grid-template-columns: 1fr; }
+      .grid-14col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .grid-stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Mobile overlay -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <span class="mi" style="font-size:15px;color:#080808;font-variation-settings:'FILL' 1,'wght' 700,'GRAD' 0,'opsz' 20">bolt</span>
+    </div>
+    <div>
+      <div style="font-weight:700;font-size:13px;color:#fff;line-height:1.2">ZarApi</div>
+      <div style="font-size:10px;color:#2a2a2a;font-family:'JetBrains Mono',monospace">Admin Panel</div>
+    </div>
+    <!-- Close btn (mobile) -->
+    <button id="sidebar-close" style="margin-left:auto;background:none;border:none;color:#444;cursor:pointer;padding:4px;display:flex;align-items:center;">
+      <span class="mi mi-sm">close</span>
+    </button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Main</div>
+    <a href="/admin"               class="nav-link <%= currentAdminPath === 'overview'      ? 'active' : '' %>"><span class="mi">dashboard</span> Overview</a>
+    <a href="/admin/users"         class="nav-link <%= currentAdminPath === 'users'         ? 'active' : '' %>"><span class="mi">group</span> Users</a>
+    <a href="/admin/upgrades"      class="nav-link <%= currentAdminPath === 'upgrades'      ? 'active' : '' %>"><span class="mi">workspace_premium</span> Upgrades</a>
+    <a href="/admin/endpoints"     class="nav-link <%= currentAdminPath === 'endpoints'     ? 'active' : '' %>"><span class="mi">add_circle</span> Endpoints</a>
+    <a href="/admin/notifications" class="nav-link <%= currentAdminPath === 'notifications' ? 'active' : '' %>"><span class="mi">notifications</span> Notifications</a>
+    <a href="/admin/blacklist"     class="nav-link <%= currentAdminPath === 'blacklist'     ? 'active' : '' %>"><span class="mi">block</span> IP Blacklist</a>
+
+    <div class="nav-section">Analytics & System</div>
+    <a href="/admin/analytics"       class="nav-link <%= currentAdminPath === 'analytics'       ? 'active' : '' %>"><span class="mi">bar_chart</span> Analytics</a>
+    <a href="/admin/system"          class="nav-link <%= currentAdminPath === 'system'          ? 'active' : '' %>"><span class="mi">monitor_heart</span> System Monitor</a>
+    <a href="/admin/status-overrides" class="nav-link <%= currentAdminPath === 'status-overrides' ? 'active' : '' %>"><span class="mi">tune</span> Status Override</a>
+    <a href="/admin/maintenance"     class="nav-link <%= currentAdminPath === 'maintenance'     ? 'active' : '' %>"><span class="mi">construction</span> Maintenance</a>
+    <a href="/admin/changelog"       class="nav-link <%= currentAdminPath === 'changelog'       ? 'active' : '' %>"><span class="mi">history</span> Changelog</a>
+
+    <div class="nav-section">App</div>
+    <a href="/dashboard" class="nav-link"><span class="mi">person</span>     My Dashboard</a>
+    <a href="/docs"      class="nav-link"><span class="mi">menu_book</span>  API Docs</a>
+    <a href="#" id="admin-logout-link" class="nav-link"><span class="mi">logout</span> Sign Out</a>
+    <form action="/auth/logout" method="POST" id="admin-logout-form" style="display:none"></form>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="user-avatar">
+        <span class="mi mi-xs" style="color:#3a3a3a">person</span>
+      </div>
+      <div style="min-width:0">
+        <div style="font-size:12px;font-weight:600;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= user.username %></div>
+        <div style="font-size:10px;color:#2a2a2a">Administrator</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Main wrapper -->
+<div class="main-wrap" id="main-wrap">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <!-- Hamburger (mobile) -->
+      <button class="hamburger" id="hamburger-btn" aria-label="Open menu">
+        <span class="mi mi-sm">menu</span>
+      </button>
+      <h1 style="font-size:13px;font-weight:600;color:#888"><%= title.replace('Admin — ','') %></h1>
+    </div>
+    <div class="topbar-right">
+      <% if (typeof appSettings !== 'undefined' && appSettings.maintenance_mode === 'true') { %>
+        <span class="badge badge-yellow" style="display:none" id="maint-badge">
+          <span class="mi mi-xs">construction</span>
+          <span class="hidden sm:inline">Maintenance ON</span>
+        </span>
+        <script>document.getElementById('maint-badge').style.display='inline-flex'</script>
+      <% } %>
+      <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#2a2a2a;white-space:nowrap">
+        <%= new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) %>
+      </span>
+    </div>
+  </div>
+
+  <!-- Page content -->
+  <div class="page-content">
