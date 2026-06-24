@@ -1,0 +1,194 @@
+<% var currentAdminPath = 'maintenance'; %>
+<%- include('../partials/adminhead', { title, settings, user, currentAdminPath, appSettings }) %>
+
+<div class="fade-up" style="display:flex;flex-direction:column;gap:14px;max-width:640px">
+
+  <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+    <script>document.addEventListener('DOMContentLoaded',function(){Swal.fire({toast:true,position:'top-end',timer:4000,showConfirmButton:false,icon:'success',title:'<%- success[0] %>',background:'#111',color:'#ededed',iconColor:'#22c55e'});});</script>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+    <script>document.addEventListener('DOMContentLoaded',function(){Swal.fire({toast:true,position:'top-end',timer:4000,showConfirmButton:false,icon:'error',title:'<%- error[0] %>',background:'#111',color:'#ededed',iconColor:'#ef4444'});});</script>
+  <% } %>
+
+  <!-- Maintenance Toggle -->
+  <div class="card">
+    <div class="card-header"><span class="mi mi-sm">construction</span> Maintenance Mode</div>
+    <div style="padding:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:<%= appSettings.maintenance_mode === 'true' ? 'rgba(251,191,36,0.06)' : 'rgba(34,197,94,0.06)' %>;border:1px solid <%= appSettings.maintenance_mode === 'true' ? 'rgba(251,191,36,0.2)' : 'rgba(34,197,94,0.2)' %>;border-radius:8px;margin-bottom:14px;gap:14px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:600;color:#ededed;font-size:14px">
+            Status:
+            <span style="color:<%= appSettings.maintenance_mode === 'true' ? '#fbbf24' : '#4ade80' %>">
+              <%= appSettings.maintenance_mode === 'true' ? '🔧 Maintenance ON' : '✅ Site is Live' %>
+            </span>
+          </div>
+          <div style="font-size:11px;color:#555;margin-top:4px">
+            <%= appSettings.maintenance_mode === 'true' ? 'Users melihat halaman maintenance. Admin tetap bisa akses.' : 'Site berjalan normal untuk semua pengguna.' %>
+          </div>
+        </div>
+        <form action="/admin/maintenance/toggle" method="POST" style="flex-shrink:0">
+          <button type="submit" class="btn <%= appSettings.maintenance_mode === 'true' ? 'btn-success' : 'btn-warning' %>">
+            <span class="mi mi-xs"><%= appSettings.maintenance_mode === 'true' ? 'check_circle' : 'construction' %></span>
+            <%= appSettings.maintenance_mode === 'true' ? 'Disable Maintenance' : 'Enable Maintenance' %>
+          </button>
+        </form>
+      </div>
+      <p style="font-size:11px;color:#444;font-family:'JetBrains Mono',monospace">⚠️ Maintenance akan memblokir semua user kecuali admin.</p>
+    </div>
+  </div>
+
+  <!-- Maintenance Message -->
+  <div class="card">
+    <div class="card-header"><span class="mi mi-sm">edit_note</span> Maintenance Message</div>
+    <form action="/admin/maintenance/message" method="POST" style="padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div>
+        <label class="form-label">Pesan yang ditampilkan ke user</label>
+        <textarea name="message" class="inp" style="min-height:90px" required><%= appSettings.maintenance_message || '' %></textarea>
+      </div>
+      <div>
+        <button type="submit" class="btn btn-white"><span class="mi mi-xs">save</span> Simpan Pesan</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ═══ SERVER CONTROL ═══ -->
+  <div class="card" style="border-color:#222">
+    <div class="card-header" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="mi mi-sm">dns</span> Server Control
+      </div>
+      <span class="badge badge-red text-[10px]">Danger Zone</span>
+    </div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+
+      <p style="font-size:12px;color:#555;line-height:1.6">
+        Kelola process PM2 server langsung dari panel ini. Pastikan kamu tau apa yang kamu lakukan sebelum menekan tombol ini.
+      </p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+        <!-- Restart -->
+        <div style="background:#0a0a0a;border:1px solid #1e1e1e;border-radius:8px;padding:14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:32px;height:32px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:7px;display:flex;align-items:center;justify-content:center">
+              <span class="mi mi-sm" style="color:#4ade80">refresh</span>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#ededed">Restart</div>
+              <div style="font-size:10px;color:#555">pm2 reload all</div>
+            </div>
+          </div>
+          <p style="font-size:11px;color:#555;margin-bottom:12px;line-height:1.5">
+            Reload server tanpa downtime. Active requests selesai dulu sebelum process diganti.
+          </p>
+          <button type="button" id="restart-btn" class="btn btn-success" style="width:100%;justify-content:center;font-size:12px">
+            <span class="mi mi-xs">refresh</span> Restart Server
+          </button>
+          <form action="/admin/server/restart" method="POST" id="restart-form" style="display:none"></form>
+        </div>
+
+        <!-- Shutdown -->
+        <div style="background:#0a0a0a;border:1px solid rgba(239,68,68,0.15);border-radius:8px;padding:14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:32px;height:32px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:7px;display:flex;align-items:center;justify-content:center">
+              <span class="mi mi-sm" style="color:#f87171">power_settings_new</span>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#ededed">Shutdown</div>
+              <div style="font-size:10px;color:#555">pm2 stop all</div>
+            </div>
+          </div>
+          <p style="font-size:11px;color:#555;margin-bottom:12px;line-height:1.5">
+            Matikan semua process PM2. Server tidak bisa diakses sampai kamu start ulang secara manual.
+          </p>
+          <button type="button" id="shutdown-btn" class="btn btn-danger" style="width:100%;justify-content:center;font-size:12px">
+            <span class="mi mi-xs">power_settings_new</span> Shutdown Server
+          </button>
+          <form action="/admin/server/shutdown" method="POST" id="shutdown-form" style="display:none"></form>
+        </div>
+
+      </div>
+
+      <!-- Warning note -->
+      <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.12);border-radius:7px;padding:10px 14px;display:flex;align-items:flex-start;gap:8px">
+        <span class="mi mi-xs" style="color:#f87171;flex-shrink:0;margin-top:1px">warning</span>
+        <p style="font-size:11px;color:#888;line-height:1.5">
+          Setelah <strong style="color:#f87171">Shutdown</strong>, server tidak akan bisa diakses dari web. Kamu harus login ke VPS secara langsung dan jalankan <code style="background:#1a1a1a;padding:1px 5px;border-radius:3px;font-size:10px">pm2 start all</code> untuk menghidupkan kembali.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Restart
+  var restartBtn = document.getElementById('restart-btn');
+  if (restartBtn) {
+    restartBtn.addEventListener('click', function() {
+      Swal.fire({
+        title: 'Restart Server?',
+        html: '<span style="font-size:12px;color:#555">Server akan di-reload via <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px">pm2 reload all</code>.<br/>Proses berjalan tanpa downtime.</span>',
+        icon: 'question', background: '#111', color: '#ededed', iconColor: '#4ade80',
+        showCancelButton: true,
+        confirmButtonColor: '#22c55e', cancelButtonColor: '#1a1a1a',
+        confirmButtonText: '<span style="color:#000;font-size:12px;font-weight:600">Ya, Restart!</span>',
+        cancelButtonText: '<span style="font-size:12px">Batal</span>',
+      }).then(function(r) {
+        if (!r.isConfirmed) return;
+        restartBtn.disabled = true;
+        restartBtn.innerHTML = '<svg style="width:14px;height:14px;animation:spin .8s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Restarting...';
+        document.getElementById('restart-form').submit();
+      });
+    });
+  }
+
+  // Shutdown
+  var shutdownBtn = document.getElementById('shutdown-btn');
+  if (shutdownBtn) {
+    shutdownBtn.addEventListener('click', function() {
+      Swal.fire({
+        title: '⚠️ Shutdown Server?',
+        html:
+          '<div style="font-size:12px;color:#555;display:flex;flex-direction:column;gap:8px">' +
+          '<p>Server akan <strong style="color:#f87171">benar-benar mati</strong>. Halaman ini akan tidak bisa diakses.</p>' +
+          '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:10px;text-align:left">' +
+          '<p style="color:#f87171;font-size:11px;margin-bottom:4px">Untuk menghidupkan kembali:</p>' +
+          '<code style="font-size:11px;color:#888;font-family:JetBrains Mono,monospace">ssh ke VPS → pm2 start all</code>' +
+          '</div>' +
+          '<p>Yakin ingin lanjut?</p>' +
+          '</div>',
+        icon: 'warning', background: '#111', color: '#ededed', iconColor: '#ef4444',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444', cancelButtonColor: '#1a1a1a',
+        confirmButtonText: '<span style="font-size:12px;font-weight:600">Ya, Shutdown!</span>',
+        cancelButtonText: '<span style="font-size:12px">Batal</span>',
+        input: 'text',
+        inputPlaceholder: 'Ketik "shutdown" untuk konfirmasi',
+        inputAttributes: { style: 'font-size:12px;background:#0a0a0a;border:1px solid #222;border-radius:6px;color:#ededed;' },
+        preConfirm: function(val) {
+          if (val !== 'shutdown') {
+            Swal.showValidationMessage('Ketik "shutdown" untuk konfirmasi');
+            return false;
+          }
+          return true;
+        }
+      }).then(function(r) {
+        if (!r.isConfirmed) return;
+        shutdownBtn.disabled = true;
+        shutdownBtn.innerHTML = '<svg style="width:14px;height:14px;animation:spin .8s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Shutting down...';
+        document.getElementById('shutdown-form').submit();
+      });
+    });
+  }
+
+});
+var st = document.createElement('style');
+st.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(st);
+</script>
+
+<%- include('../partials/admintail') %>
