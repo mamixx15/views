@@ -1,0 +1,102 @@
+<% var currentAdminPath = 'changelog'; var appSettings = appSettings || {}; %>
+<%- include('../partials/adminhead', { title, settings, user, currentAdminPath, appSettings }) %>
+
+<div class="fade-up" style="display:flex;flex-direction:column;gap:14px">
+
+  <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+    <script>document.addEventListener('DOMContentLoaded',function(){Swal.fire({toast:true,position:'top-end',timer:3000,showConfirmButton:false,icon:'success',title:'<%- success[0] %>',background:'#111',color:'#ededed',iconColor:'#22c55e'});});</script>
+  <% } %>
+
+  <!-- Create entry -->
+  <div class="card">
+    <div class="card-header"><span class="mi mi-sm">add_circle</span> Add Changelog Entry</div>
+    <form action="/admin/changelog/create" method="POST" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div class="form-row">
+        <div>
+          <label class="form-label">Title *</label>
+          <input type="text" name="title" class="inp" placeholder="What changed?" required/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <label class="form-label">Type</label>
+            <select name="type" class="inp">
+              <option value="new">🟢 New</option>
+              <option value="improved">🔵 Improved</option>
+              <option value="fixed">🟡 Fixed</option>
+              <option value="security">🔴 Security</option>
+              <option value="deprecated">🔴 Deprecated</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Version</label>
+            <input type="text" name="version" class="inp" value="<%= version %>" placeholder="v1.0.0"/>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Description</label>
+        <textarea name="description" class="inp" placeholder="More detail (optional)..."></textarea>
+      </div>
+      <div>
+        <label class="form-label">Endpoint (optional)</label>
+        <input type="text" name="endpoint" class="inp" placeholder="/api/tools/example"/>
+      </div>
+      <div><button type="submit" class="btn btn-white"><span class="mi mi-xs">publish</span> Publish Entry</button></div>
+    </form>
+  </div>
+
+  <!-- Entry list -->
+  <div class="card">
+    <div class="card-header" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px"><span class="mi mi-sm">history</span> All Entries</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a href="/changelog" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:4px 10px">
+          <span class="mi mi-xs">open_in_new</span> View Public
+        </a>
+        <span class="badge badge-white"><%= entries.length %></span>
+      </div>
+    </div>
+
+    <% if (entries.length === 0) { %>
+      <p class="empty-msg">No entries yet. New endpoints are auto-detected on startup.</p>
+    <% } else { entries.forEach(function(e) {
+      var typeMap = { new:'badge-green', improved:'badge-blue', fixed:'badge-yellow', security:'badge-red', deprecated:'badge-red' };
+    %>
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid #111">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+            <span class="badge <%= typeMap[e.type] || 'badge-green' %> text-[10px]"><%= e.type %></span>
+            <span style="font-weight:600;color:#ededed;font-size:13px"><%= e.title %></span>
+            <% if (e.version) { %><span class="badge badge-white" style="font-size:10px"><%= e.version %></span><% } %>
+          </div>
+          <% if (e.description) { %><p style="font-size:12px;color:#555;margin-bottom:4px"><%= e.description %></p><% } %>
+          <% if (e.endpoint) { %><code style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#444"><%= e.endpoint %></code><% } %>
+          <p style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#333;margin-top:4px"><%= new Date(e.created_at).toLocaleString() %></p>
+        </div>
+        <button type="button" class="btn btn-danger del-cl-btn" style="padding:4px 8px;font-size:11px;flex-shrink:0" data-id="<%= e.id %>">
+          <span class="mi mi-xs">delete</span>
+        </button>
+        <form action="/admin/changelog/<%= e.id %>/delete" method="POST" id="delcl-<%= e.id %>" style="display:none"></form>
+      </div>
+    <% }) } %>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.del-cl-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = btn.dataset.id;
+      Swal.fire({
+        title: 'Delete entry?', icon: 'warning',
+        background:'#111', color:'#ededed', iconColor:'#ef4444',
+        showCancelButton:true, confirmButtonColor:'#ef4444', cancelButtonColor:'#1a1a1a',
+        confirmButtonText:'<span style="font-size:12px;font-weight:600">Delete</span>',
+        cancelButtonText:'<span style="font-size:12px">Cancel</span>',
+      }).then(function(r) { if(r.isConfirmed) document.getElementById('delcl-'+id).submit(); });
+    });
+  });
+});
+</script>
+
+<%- include('../partials/admintail') %>
