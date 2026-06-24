@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= title %> | ZarApi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        fontFamily: { sans:['Inter','sans-serif'], mono:['JetBrains Mono','monospace'] },
+        colors: { bg:'#080808', surface:'#0f0f0f', card:'#111111', border:'#1e1e1e', muted:'#2a2a2a', dim:'#737373', text:'#ededed', soft:'#a1a1a1', danger:'#ef4444', success:'#22c55e', info:'#3b82f6', warning:'#f59e0b' }
+      }}
+    };
+  </script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:#080808;color:#ededed;font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+    .mi{font-family:'Material Symbols Rounded';font-style:normal;font-weight:normal;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;user-select:none;flex-shrink:0}
+    .mi-xs{font-size:14px}.mi-sm{font-size:16px}.mi-md{font-size:20px}.mi-lg{font-size:24px}.mi-fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 20}
+    ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:#0f0f0f}::-webkit-scrollbar-thumb{background:#1e1e1e;border-radius:99px}
+    .card{background:#111;border:1px solid #1e1e1e;border-radius:10px}
+    .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;border-radius:4px;border:1px solid}
+    .badge-green{color:#22c55e;border-color:#166534;background:rgba(34,197,94,0.08)}
+    .badge-red{color:#f87171;border-color:#991b1b;background:rgba(239,68,68,0.08)}
+    .badge-blue{color:#60a5fa;border-color:#1d4ed8;background:rgba(59,130,246,0.08)}
+    .badge-white{color:#ededed;border-color:#333;background:#1a1a1a}
+    .badge-yellow{color:#fbbf24;border-color:#92400e;background:rgba(251,191,36,0.08)}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;font-weight:600;border-radius:6px;border:none;cursor:pointer;transition:all 0.15s}
+    .btn-white{background:#fff;color:#080808}.btn-white:hover{opacity:0.88}
+    .btn-ghost{background:transparent;color:#737373;border:1px solid #1e1e1e}.btn-ghost:hover{border-color:#333;color:#ededed}
+    .btn-danger{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.25)}.btn-danger:hover{background:rgba(239,68,68,0.18)}
+    .btn-success{background:rgba(34,197,94,0.1);color:#4ade80;border:1px solid rgba(34,197,94,0.25)}.btn-success:hover{background:rgba(34,197,94,0.18)}
+    .inp{width:100%;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:6px;color:#ededed;font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px;outline:none;transition:border-color 0.15s}
+    .inp:focus{border-color:#333;box-shadow:0 0 0 3px rgba(255,255,255,0.04)}
+    .inp::placeholder{color:#2a2a2a}
+    select.inp{cursor:pointer}
+    .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .table-scroll::-webkit-scrollbar{height:4px}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp 0.35s ease both}
+    .sidebar-link{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:7px;font-size:13px;color:#737373;transition:all 0.15s;text-decoration:none}
+    .sidebar-link:hover{background:#111;color:#ededed}
+    .sidebar-link.active{background:#161616;color:#fff;border:1px solid #1e1e1e}
+    .sidebar-link .mi{font-size:16px}
+    .stat-card{background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:16px 20px}
+  </style>
+</head>
+<body class="flex min-h-screen">
+
+<!-- Sidebar -->
+<aside style="width:220px;min-height:100vh;background:#0a0a0a;border-right:1px solid #1a1a1a;display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:40">
+  <!-- Logo -->
+  <div style="padding:16px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;gap:10px">
+    <div style="width:28px;height:28px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center">
+      <span class="mi" style="font-size:14px;color:#080808;font-variation-settings:'FILL' 1,'wght' 700,'GRAD' 0,'opsz' 20">bolt</span>
+    </div>
+    <div>
+      <div style="font-weight:700;font-size:13px;color:#fff">ZarApi</div>
+      <div style="font-size:10px;color:#555;font-family:'JetBrains Mono',monospace">Admin Panel</div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav style="padding:12px 10px;flex:1;overflow-y:auto">
+    <p style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#333;text-transform:uppercase;letter-spacing:.08em;padding:0 4px;margin-bottom:6px">Menu</p>
+
+    <% var current = typeof currentAdminPath !== 'undefined' ? currentAdminPath : ''; %>
+    <a href="/admin" class="sidebar-link <%= current === 'overview' ? 'active' : '' %>">
+      <span class="mi">dashboard</span> Overview
+    </a>
+    <a href="/admin/users" class="sidebar-link <%= current === 'users' ? 'active' : '' %>">
+      <span class="mi">group</span> Users
+    </a>
+    <a href="/admin/notifications" class="sidebar-link <%= current === 'notifications' ? 'active' : '' %>">
+      <span class="mi">notifications</span> Notifications
+    </a>
+    <a href="/admin/blacklist" class="sidebar-link <%= current === 'blacklist' ? 'active' : '' %>">
+      <span class="mi">block</span> IP Blacklist
+    </a>
+    <a href="/admin/system" class="sidebar-link <%= current === 'system' ? 'active' : '' %>">
+      <span class="mi">monitor_heart</span> System
+    </a>
+    <a href="/admin/maintenance" class="sidebar-link <%= current === 'maintenance' ? 'active' : '' %>">
+      <span class="mi">construction</span> Maintenance
+    </a>
+
+    <div style="border-top:1px solid #1a1a1a;margin:12px 0;padding-top:12px">
+      <p style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#333;text-transform:uppercase;letter-spacing:.08em;padding:0 4px;margin-bottom:6px">App</p>
+      <a href="/dashboard" class="sidebar-link">
+        <span class="mi">person</span> My Dashboard
+      </a>
+      <a href="/docs" class="sidebar-link">
+        <span class="mi">menu_book</span> API Docs
+      </a>
+      <a href="#" id="admin-logout-link" class="sidebar-link" style="color:#555">
+        <span class="mi">logout</span> Sign Out
+      </a>
+      <form action="/auth/logout" method="POST" id="admin-logout-form" class="hidden"></form>
+    </div>
+  </nav>
+
+  <!-- User pill -->
+  <div style="padding:12px;border-top:1px solid #1a1a1a">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#111;border-radius:7px;border:1px solid #1e1e1e">
+      <div style="width:28px;height:28px;background:#1e1e1e;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <span class="mi mi-xs" style="color:#555">person</span>
+      </div>
+      <div style="min-width:0">
+        <div style="font-size:12px;font-weight:600;color:#ededed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><%= user.username %></div>
+        <div style="font-size:10px;color:#555">Administrator</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Main content -->
+<div style="margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column">
+
+  <!-- Top bar -->
+  <div style="height:52px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;background:#080808;z-index:30">
+    <div>
+      <h1 style="font-size:14px;font-weight:600;color:#ededed"><%= title.replace('Admin — ','') %></h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#555"><%= new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) %></span>
+      <% var maintenanceOn = typeof appSettings !== 'undefined' && appSettings.maintenance_mode === 'true'; %>
+      <% if (maintenanceOn) { %>
+        <span class="badge badge-yellow"><span class="mi mi-xs">construction</span> Maintenance ON</span>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Page content -->
+  <div style="padding:24px;flex:1">
+    <%- body %>
+  </div>
+</div>
+
+<!-- SweetAlert2 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.12.4/sweetalert2.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.12.4/sweetalert2.all.min.js"></script>
+<style>
+  .swal2-popup{background:#161616!important;border:1px solid #2a2a2a!important;border-radius:10px!important;box-shadow:0 25px 50px rgba(0,0,0,.6)!important;font-family:'Inter',sans-serif!important;padding:24px!important}
+  .swal2-title{color:#ededed!important;font-size:15px!important;font-weight:600!important}
+  .swal2-html-container{color:#737373!important;font-size:13px!important}
+  .swal2-confirm{border-radius:7px!important;font-size:12px!important;font-weight:600!important}
+  .swal2-cancel{border-radius:7px!important;font-size:12px!important;background:#1f1f1f!important;color:#a1a1a1!important;border:1px solid #333!important}
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var ll = document.getElementById('admin-logout-link');
+    if (ll) ll.addEventListener('click', function(e) {
+      e.preventDefault();
+      Swal.fire({ title:'Sign out?', icon:'question', background:'#161616', color:'#ededed', iconColor:'#fff',
+        showCancelButton:true, confirmButtonColor:'#fff', cancelButtonColor:'#1f1f1f',
+        confirmButtonText:'<span style="color:#080808;font-weight:600;font-size:12px">Sign out</span>',
+        cancelButtonText:'<span style="font-size:12px">Cancel</span>',
+      }).then(function(r) { if(r.isConfirmed) document.getElementById('admin-logout-form').submit(); });
+    });
+  });
+</script>
+</body>
+</html>
