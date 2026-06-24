@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>404 — Page Not Found | <%= settings.name %></title>
+  <link rel="icon" type="image/png" href="/img/icon.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #080808;
+      color: #ededed;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Background subtle glow ── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(255,255,255,0.025) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    /* ── Illustration ── */
+    .illustration-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      animation: floatUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .illustration-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+      /* Remove white background from JPG */
+      mix-blend-mode: screen;
+      filter: brightness(0.95) contrast(1.05);
+      animation: gentleFloat 5s ease-in-out infinite;
+      drop-shadow: none;
+    }
+    /* Sparkle dots matching the illustration */
+    .sparkle {
+      position: absolute;
+      border-radius: 50%;
+      animation: sparklePop var(--dur) var(--delay) ease-in-out infinite;
+    }
+    .sparkle-1 { width:10px; height:10px; background:#ef4444; top:18%; left:10%; --dur:2.2s; --delay:0s; }
+    .sparkle-2 { width: 8px; height: 8px; background:#fbbf24; top:14%; right:15%; --dur:1.8s; --delay:0.4s; }
+    .sparkle-3 { width: 6px; height: 6px; background:#fbbf24; top:22%; right:8%; --dur:2.4s; --delay:0.8s; }
+    .sparkle-4 { width: 6px; height: 6px; background:#ef4444; bottom:30%; right:12%; --dur:2s; --delay:1.2s; }
+
+    @keyframes floatUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-10px); }
+    }
+    @keyframes sparklePop {
+      0%, 100% { transform: scale(0.4) rotate(0deg);   opacity: 0.3; }
+      50%       { transform: scale(1.2) rotate(45deg);  opacity: 1; }
+    }
+
+    /* ── Text content ── */
+    .content {
+      margin-top: -8px;
+      animation: fadeSlideUp 0.6s 0.3s ease both;
+    }
+    .eyebrow {
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #3a3a3a;
+      margin-bottom: 10px;
+    }
+    .title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 5vw, 38px);
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 10px;
+      line-height: 1.15;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.7;
+      max-width: 380px;
+      margin: 0 auto 28px;
+    }
+    .subtitle span { color: #888; }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Actions ── */
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      animation: fadeSlideUp 0.6s 0.5s ease both;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 11px 24px;
+      background: #ffffff;
+      color: #080808;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity .15s ease, transform .15s ease;
+    }
+    .btn-primary:hover { opacity: .88; transform: translateY(-2px); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 11px 24px;
+      background: transparent;
+      color: #555;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      border-radius: 8px;
+      border: 1px solid #1e1e1e;
+      text-decoration: none;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-ghost:hover { border-color: #333; color: #888; }
+
+    .mi {
+      font-family: 'Material Symbols Rounded';
+      font-style: normal;
+      display: inline-flex;
+      align-items: center;
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+      font-size: 16px;
+    }
+
+    /* ── Branding ── */
+    .brand {
+      margin-top: 32px;
+      font-size: 10px;
+      color: #1e1e1e;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: fadeSlideUp 0.6s 0.7s ease both;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- Illustration -->
+  <div class="illustration-wrap">
+    <img src="/img/404.png" alt="404 - Page Not Found"/>
+    <!-- Sparkle decorations -->
+    <div class="sparkle sparkle-1"></div>
+    <div class="sparkle sparkle-2"></div>
+    <div class="sparkle sparkle-3"></div>
+    <div class="sparkle sparkle-4"></div>
+  </div>
+
+  <!-- Text -->
+  <div class="content">
+    <p class="eyebrow">Error 404</p>
+    <h1 class="title">Page Not Found</h1>
+    <p class="subtitle">
+      Halaman yang kamu cari tidak ditemukan.<br/>
+      <span>Mungkin sudah dipindah, dihapus, atau URL-nya salah.</span>
+    </p>
+
+    <div class="actions">
+      <a href="/" class="btn-primary">
+        <span class="mi">arrow_back</span> Back to Home
+      </a>
+      <a href="/docs" class="btn-ghost">
+        <span class="mi">menu_book</span> API Docs
+      </a>
+      <a href="/status" class="btn-ghost">
+        <span class="mi">monitor_heart</span> Status
+      </a>
+    </div>
+  </div>
+
+  <p class="brand"><%= settings.name %> &mdash; <%= settings.version %></p>
+</div>
+
+</body>
+</html>
