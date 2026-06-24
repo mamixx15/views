@@ -1,0 +1,81 @@
+<% var currentAdminPath = 'status-overrides'; var appSettings = appSettings || {}; %>
+<%- include('../partials/adminhead', { title, settings, user, currentAdminPath, appSettings }) %>
+
+<div class="fade-up" style="display:flex;flex-direction:column;gap:14px">
+
+  <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+    <script>document.addEventListener('DOMContentLoaded',function(){Swal.fire({toast:true,position:'top-end',timer:3000,showConfirmButton:false,icon:'success',title:'<%- success[0] %>',background:'#111',color:'#ededed',iconColor:'#22c55e'});});</script>
+  <% } %>
+
+  <!-- Set override -->
+  <div class="card">
+    <div class="card-header"><span class="mi mi-sm">tune</span> Set Endpoint Override</div>
+    <form action="/admin/status-overrides/set" method="POST" style="padding:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <div style="flex:1.5;min-width:180px">
+        <label class="form-label">Endpoint</label>
+        <select name="endpoint" class="inp">
+          <% endpoints.forEach(function(ep) { %>
+            <option value="<%= ep.path.replace('/api','') %>"><%= ep.name %> (<%= ep.path %>)</option>
+          <% }) %>
+        </select>
+      </div>
+      <div style="flex:0.8;min-width:120px">
+        <label class="form-label">Override Status</label>
+        <select name="status" class="inp">
+          <option value="operational">Operational</option>
+          <option value="degraded">Degraded</option>
+          <option value="down">Down</option>
+          <option value="maintenance">Maintenance</option>
+        </select>
+      </div>
+      <div style="flex:2;min-width:200px">
+        <label class="form-label">Message (optional)</label>
+        <input type="text" name="message" placeholder="Shown to users on status page" class="inp"/>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button type="submit" class="btn btn-white"><span class="mi mi-xs">save</span> Save</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Current overrides -->
+  <div class="card">
+    <div class="card-header" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px"><span class="mi mi-sm">list_alt</span> Active Overrides</div>
+      <span class="badge badge-white"><%= overrides.length %></span>
+    </div>
+    <% if (overrides.length === 0) { %>
+      <p class="empty-msg">No overrides — auto-detection is active for all endpoints.</p>
+    <% } else { %>
+      <div class="table-scroll">
+        <table class="admin-table" style="min-width:400px">
+          <thead><tr><th>Endpoint</th><th>Status</th><th>Message</th><th>Updated</th><th>Action</th></tr></thead>
+          <tbody>
+            <% overrides.forEach(function(o) { %>
+              <tr>
+                <td class="mono soft"><%= o.endpoint %></td>
+                <td>
+                  <span class="badge <%= o.status==='operational'?'badge-green':o.status==='degraded'?'badge-yellow':o.status==='down'?'badge-red':'badge-white' %> text-[10px]">
+                    <%= o.status %>
+                  </span>
+                </td>
+                <td class="dim" style="font-size:11px"><%= o.message || '—' %></td>
+                <td class="mono dim" style="font-size:10px"><%= new Date(o.updated_at).toLocaleString() %></td>
+                <td>
+                  <form action="/admin/status-overrides/delete" method="POST" style="display:inline">
+                    <input type="hidden" name="endpoint" value="<%= o.endpoint %>"/>
+                    <button type="submit" class="btn btn-danger" style="padding:4px 8px;font-size:11px">
+                      <span class="mi mi-xs">delete</span> Remove
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/admintail') %>
