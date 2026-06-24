@@ -1,0 +1,273 @@
+<% var currentAdminPath = 'endpoints'; var appSettings = appSettings || {}; %>
+<%- include('../partials/adminhead', { title, settings, user, currentAdminPath, appSettings }) %>
+
+<div class="fade-up" style="display:flex;flex-direction:column;gap:14px">
+
+  <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+    <script>document.addEventListener('DOMContentLoaded',function(){Swal.fire({toast:true,position:'top-end',timer:5000,showConfirmButton:false,icon:'success',title:'<%- success[0] %>',background:'#111',color:'#ededed',iconColor:'#22c55e'});});</script>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+    <script>document.addEventListener('DOMContentLoaded',function(){Swal.fire({toast:true,position:'top-end',timer:5000,showConfirmButton:false,icon:'error',title:'<%- error[0] %>',background:'#111',color:'#ededed',iconColor:'#ef4444'});});</script>
+  <% } %>
+
+  <div style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.18);border-radius:8px;padding:12px 16px;display:flex;align-items:flex-start;gap:10px">
+    <span class="mi mi-sm" style="color:#60a5fa;flex-shrink:0;margin-top:1px">info</span>
+    <div style="font-size:12px;color:#60a5fa;line-height:1.6">
+      <strong>Auto-generated endpoint:</strong> Kamu hanya perlu mengisi bagian <em>dalam</em> fungsi run() — gak perlu tulis module.exports, cukup logika API-nya saja. Server akan restart otomatis setelah endpoint dibuat.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="mi mi-sm">add_circle</span> Tambah Endpoint Baru</div>
+    <form action="/admin/endpoints/create" method="POST" style="padding:16px;display:flex;flex-direction:column;gap:14px" id="create-form">
+
+      <div class="form-row">
+        <div>
+          <label class="form-label">Nama Endpoint *</label>
+          <input type="text" name="name" class="inp" placeholder="e.g. Random Quote" required/>
+        </div>
+        <div>
+          <label class="form-label">Category</label>
+          <select name="category" class="inp">
+            <% categories.forEach(function(cat) { %>
+              <option value="<%= cat %>"><%= cat %></option>
+            <% }) %>
+            <option value="Downloader">Downloader</option>
+            <option value="Information">Information</option>
+            <option value="Custom">Custom</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label class="form-label">Path * <span style="font-weight:400;text-transform:none;color:#444;letter-spacing:0">(tanpa /api, e.g. /tools/random-quote)</span></label>
+          <input type="text" name="path" class="inp" placeholder="/tools/random-quote" required id="path-input"/>
+        </div>
+        <div>
+          <label class="form-label">Deskripsi *</label>
+          <input type="text" name="desc" class="inp" placeholder="Deskripsi singkat endpoint ini" required/>
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label">Parameter (Opsional) <span style="font-weight:400;text-transform:none;color:#444;letter-spacing:0">— pisahkan dengan koma, contoh: text, url, limit</span></label>
+        <input type="text" name="paramsList" class="inp" placeholder="text, url"/>
+      </div>
+
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <label class="form-label" style="margin:0">Kode Fungsi run() * <span style="font-weight:400;text-transform:none;color:#444;letter-spacing:0">— isi body fungsi saja</span></label>
+          <button type="button" id="insert-template-btn" class="btn btn-ghost" style="font-size:11px;padding:3px 10px">
+            <span class="mi mi-xs">code</span> Template
+          </button>
+        </div>
+
+        <div style="background:#060606;border:1px solid #1e1e1e;border-radius:8px 8px 0 0;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#333;border-bottom:none">
+          <span style="color:#555">async function</span> <span style="color:#60a5fa">run</span><span style="color:#ededed">(req, res) {</span>
+        </div>
+        
+        <textarea
+          id="code-editor"
+          class="inp"
+          style="border-radius:0;font-family:'JetBrains Mono',monospace;font-size:12px;min-height:240px;resize:vertical;line-height:1.7;padding:12px 14px;border-top:none;border-bottom:none;background:#080808;tab-size:2"
+          placeholder="  const { text } = req.query;
+
+  if (!text) {
+    return res.status(400).json({ status: false, code: 400, message: 'Missing: text' });
+  }
+
+  return res.json({
+    status: true,
+    code: 200,
+    result: { output: text.toUpperCase() },
+  });"
+          required
+          spellcheck="false"
+        ></textarea>
+        
+        <input type="hidden" name="codeBase64" id="hidden-code">
+
+        <div style="background:#060606;border:1px solid #1e1e1e;border-radius:0 0 8px 8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#333;border-top:none">
+          <span style="color:#ededed">}</span>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:7px">
+        <span class="mi mi-xs" style="color:#555">description</span>
+        <span style="font-size:11px;color:#444;font-family:'JetBrains Mono',monospace">File akan dibuat: </span>
+        <code style="font-size:11px;color:#60a5fa" id="filename-preview">src/api/&lt;filename&gt;.js</code>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button type="submit" class="btn btn-white" id="create-btn">
+          <span class="mi mi-xs">rocket_launch</span> Buat Endpoint & Restart Server
+        </button>
+        <button type="reset" class="btn btn-ghost">
+          <span class="mi mi-xs">refresh</span> Reset
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px"><span class="mi mi-sm">api</span> Endpoint Aktif</div>
+      <span class="badge badge-white"><%= endpoints.length %> endpoint</span>
+    </div>
+
+    <% if (endpoints.length === 0) { %>
+      <p class="empty-msg">Belum ada endpoint.</p>
+    <% } else { %>
+      <div class="table-scroll">
+        <table class="admin-table" style="min-width:500px">
+          <thead>
+            <tr><th>File</th><th>Name</th><th>Path</th><th>Category</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <% endpoints.forEach(function(ep) { %>
+              <tr>
+                <td class="mono dim" style="font-size:10px"><%= ep.file %></td>
+                <td style="font-weight:600;color:#ededed;font-size:12px"><%= ep.name %></td>
+                <td class="mono" style="color:#60a5fa;font-size:11px"><%= ep.path %></td>
+                <td><span class="badge badge-white" style="font-size:10px"><%= ep.category %></span></td>
+                <td>
+                  <button type="button" class="btn btn-danger del-ep-btn" style="padding:4px 8px;font-size:11px"
+                    data-file="<%= ep.file %>" data-name="<%= ep.name %>">
+                    <span class="mi mi-xs">delete</span>
+                  </button>
+                  <form action="/admin/endpoints/delete" method="POST" id="del-<%= ep.file.replace('.js','') %>" style="display:none">
+                    <input type="hidden" name="filename" value="<%= ep.file %>"/>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+// Live filename preview
+document.addEventListener('DOMContentLoaded', function() {
+  var pathInput   = document.getElementById('path-input');
+  var filePreview = document.getElementById('filename-preview');
+
+  function updatePreview() {
+    var val = pathInput.value.trim();
+    if (!val) { filePreview.textContent = 'src/api/<filename>.js'; return; }
+    var name = val.replace(/^\//, '').split('/').pop().replace(/[^a-zA-Z0-9\-_]/g, '') || 'endpoint';
+    filePreview.textContent = 'src/api/' + name + '.js';
+  }
+  pathInput.addEventListener('input', updatePreview);
+
+  // Tab key in textarea
+  var editor = document.getElementById('code-editor');
+  editor.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      var start = editor.selectionStart, end = editor.selectionEnd;
+      editor.value = editor.value.slice(0, start) + '  ' + editor.value.slice(end);
+      editor.selectionStart = editor.selectionEnd = start + 2;
+    }
+  });
+
+  // Template insert
+  var tmplBtn = document.getElementById('insert-template-btn');
+  if (tmplBtn) {
+    tmplBtn.addEventListener('click', function() {
+      editor.value = [
+        '  const { text } = req.query;',
+        '',
+        '  if (!text) {',
+        "    return res.status(400).json({ status: false, code: 400, message: \"Parameter 'text' wajib diisi.\" });",
+        '  }',
+        '',
+        '  try {',
+        '    // Tulis logika kamu di sini',
+        '    const result = text.toUpperCase(); // contoh',
+        '',
+        '    return res.json({',
+        '      status: true,',
+        '      code: 200,',
+        '      result: { output: result },',
+        '    });',
+        '  } catch (err) {',
+        "    return res.status(500).json({ status: false, code: 500, message: 'Server error.', detail: err.message });",
+        '  }',
+      ].join('\n');
+    });
+  }
+
+  // Submit confirmation
+  var createForm = document.getElementById('create-form');
+  if (createForm) {
+    createForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var btn  = document.getElementById('create-btn');
+      var name = createForm.querySelector('[name="name"]').value;
+      var path = createForm.querySelector('[name="path"]').value;
+      Swal.fire({
+        title: 'Buat Endpoint?',
+        html:
+          '<div style="text-align:left;font-size:12px;display:flex;flex-direction:column;gap:8px">' +
+          '<div style="background:#111;border:1px solid #222;border-radius:6px;padding:12px">' +
+          '<div style="color:#888;margin-bottom:4px">Endpoint baru:</div>' +
+          '<div style="color:#ededed;font-weight:600">' + name + '</div>' +
+          '<div style="color:#60a5fa;font-family:JetBrains Mono,monospace;font-size:11px">/api' + path + '</div>' +
+          '</div>' +
+          '<div style="color:#f59e0b;font-size:11px;display:flex;align-items:center;gap:6px">' +
+          '<span style="font-family:Material Symbols Rounded;font-size:14px">warning</span>' +
+          'Server akan restart otomatis setelah endpoint dibuat.' +
+          '</div>' +
+          '</div>',
+        icon: 'question', background: '#111', color: '#ededed', iconColor: '#60a5fa',
+        showCancelButton: true,
+        confirmButtonColor: '#fff', cancelButtonColor: '#1a1a1a',
+        confirmButtonText: '<span style="color:#080808;font-size:12px;font-weight:600">Ya, Buat!</span>',
+        cancelButtonText: '<span style="font-size:12px">Batal</span>',
+      }).then(function(r) {
+        if (r.isConfirmed) {
+          btn.disabled = true;
+          btn.innerHTML = '<svg style="width:14px;height:14px;animation:spin .8s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Membuat...';
+          
+          // PERUBAHAN UTAMA: Encode ke Base64 sebelum form dikirim
+          var rawCode = document.getElementById('code-editor').value;
+          // Menggunakan btoa + unescape untuk memastikan karakter spesial/UTF-8 aman
+          document.getElementById('hidden-code').value = btoa(unescape(encodeURIComponent(rawCode)));
+          
+          createForm.submit();
+        }
+      });
+    });
+  }
+
+  // Delete buttons
+  document.querySelectorAll('.del-ep-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var file = btn.dataset.file;
+      var name = btn.dataset.name;
+      Swal.fire({
+        title: 'Hapus Endpoint?',
+        html: '<span style="font-size:12px;color:#555">Endpoint <b style="color:#ededed">' + name + '</b> akan dihapus permanen dan server akan restart.</span>',
+        icon: 'warning', background: '#111', color: '#ededed', iconColor: '#ef4444',
+        showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#1a1a1a',
+        confirmButtonText: '<span style="font-size:12px;font-weight:600">Hapus</span>',
+        cancelButtonText: '<span style="font-size:12px">Batal</span>',
+      }).then(function(r) {
+        if (r.isConfirmed) document.getElementById('del-' + file.replace('.js','')).submit();
+      });
+    });
+  });
+
+});
+
+// Spin keyframe
+var st = document.createElement('style');
+st.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(st);
+</script>
+
+<%- include('../partials/admintail') %>
