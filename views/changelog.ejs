@@ -1,0 +1,83 @@
+<%- include('partials/head', { title, settings }) %>
+<%- include('partials/navbar') %>
+
+<div class="max-w-3xl mx-auto px-5 py-12">
+  <!-- Header -->
+  <div class="text-center mb-12 fade-up">
+    <span class="badge badge-white mb-4"><span class="mi mi-xs">history</span> Changelog</span>
+    <h1 class="text-3xl font-bold text-white mt-3 mb-2">What's New</h1>
+    <p class="text-dim text-sm">Track every update, new endpoint, and improvement to ZarApi.</p>
+  </div>
+
+  <% if (entries.length === 0) { %>
+    <div class="card p-12 text-center fade-up">
+      <span class="mi mi-lg text-muted block mb-3">history</span>
+      <p class="text-dim text-sm">No changelog entries yet.</p>
+    </div>
+  <% } else {
+    // Group by version
+    var byVersion = {};
+    entries.forEach(function(e) {
+      var v = e.version || 'General';
+      if (!byVersion[v]) byVersion[v] = [];
+      byVersion[v].push(e);
+    });
+    var versions = Object.keys(byVersion);
+  %>
+    <div class="space-y-10 fade-up">
+      <% versions.forEach(function(ver, vi) { %>
+        <div>
+          <!-- Version heading -->
+          <div class="flex items-center gap-4 mb-6">
+            <span class="badge badge-white px-3 py-1.5 text-sm font-mono"><%= ver %></span>
+            <div class="flex-1 border-t border-border"></div>
+            <span class="text-xs font-mono text-dim whitespace-nowrap">
+              <%= new Date(byVersion[ver][0].created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) %>
+            </span>
+          </div>
+
+          <!-- Entries -->
+          <div class="space-y-3 pl-4 border-l-2 border-border">
+            <% byVersion[ver].forEach(function(entry) {
+              var typeMap = {
+                new:        { badge:'badge-green',  icon:'add_circle',     label:'New'        },
+                improved:   { badge:'badge-blue',   icon:'auto_awesome',   label:'Improved'   },
+                fixed:      { badge:'badge-yellow', icon:'bug_report',     label:'Fixed'      },
+                deprecated: { badge:'badge-red',    icon:'remove_circle',  label:'Deprecated' },
+                security:   { badge:'badge-red',    icon:'security',       label:'Security'   },
+              };
+              var t = typeMap[entry.type] || typeMap.new;
+            %>
+              <div class="card p-4 ml-2 hover:border-muted transition-colors">
+                <div class="flex items-start gap-3">
+                  <div class="w-7 h-7 rounded-full bg-surface border border-border flex items-center justify-center shrink-0 mt-0.5">
+                    <span class="mi" style="font-size:14px"><%= t.icon %></span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                      <span class="badge <%= t.badge %> text-[10px]"><%= t.label %></span>
+                      <span class="text-sm font-semibold text-white"><%= entry.title %></span>
+                    </div>
+                    <% if (entry.description) { %>
+                      <p class="text-xs text-dim leading-relaxed"><%= entry.description %></p>
+                    <% } %>
+                    <% if (entry.endpoint) { %>
+                      <code class="text-[10px] font-mono text-dim bg-surface px-2 py-0.5 rounded mt-1 inline-block"><%= entry.endpoint %></code>
+                    <% } %>
+                  </div>
+                  <span class="text-[10px] font-mono text-muted shrink-0 hidden sm:block">
+                    <%= new Date(entry.created_at).toLocaleDateString() %>
+                  </span>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>
+</body>
+</html>
