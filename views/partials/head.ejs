@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title><%= title %> | Nex Api's </title>
+  <meta name="description" content="<%= settings.description %>" />
+  <meta name="keywords" content="Nex Api, ZarApi, API, REST API, AI API, downloader API, canvas API, free API, developer tools, endpoint API" />
+  <meta name="author" content="ZarOfficial" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <link rel="canonical" href="https://nexapi.fun" />
+
+  <link rel="icon" type="image/png" href="/img/icon.png" />
+  <link rel="shortcut icon" type="image/png" href="/img/icon.png" />
+  <link rel="apple-touch-icon" href="/img/icon.png" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="<%= settings.name || 'ZarApi' %>" />
+  <meta property="og:title" content="<%= title %> | Nex Api by ZarApi" />
+  <meta property="og:description" content="<%= settings.description %>" />
+  <meta property="og:image" content="/img/thumbnail.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="https://nexapi.fun" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="<%= title %> | Nex Api" />
+  <meta name="twitter:description" content="<%= settings.description %>" />
+  <meta name="twitter:image" content="/img/thumbnail.png" />
+
+  <meta name="theme-color" content="#080808" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','sans-serif'], mono: ['JetBrains Mono','monospace'] },
+          colors: {
+            bg: 'var(--c-bg)',
+            surface: 'var(--c-surface)',
+            card: 'var(--c-card)',
+            border: 'var(--c-border)',
+            muted: 'var(--c-muted)',
+            dim: 'var(--c-dim)',
+            text: 'var(--c-text)',
+            soft: 'var(--c-soft)',
+            white: 'var(--c-white)',
+            danger:'#ef4444', success:'#22c55e', info:'#3b82f6', warning:'#f59e0b',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --c-bg:      #080808;
+      --c-surface: #0f0f0f;
+      --c-card:    #161616;
+      --c-border:  #242424;
+      --c-muted:   #3a3a3a;
+      --c-dim:     #737373;
+      --c-text:    #ededed;
+      --c-soft:    #a1a1a1;
+      --c-white:   #ffffff;
+    }
+    html.light {
+      --c-bg:      #fdfdfd;
+      --c-surface: #f7f7f7;
+      --c-card:    #ffffff;
+      --c-border:  #e5e5e5;
+      --c-muted:   #d4d4d4;
+      --c-dim:     #737373;
+      --c-text:    #171717;
+      --c-soft:    #525252;
+      --c-white:   #000000;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--c-bg); color: var(--c-text); font-family:'Inter',sans-serif; font-size:14px; line-height:1.6; -webkit-font-smoothing:antialiased; min-height:100vh; }
+    .mi { font-family:'Material Symbols Rounded'; font-style:normal; font-weight:normal; display:inline-flex; align-items:center; justify-content:center; font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20; user-select:none; flex-shrink:0; line-height:1; }
+    .mi-xs{font-size:14px} .mi-sm{font-size:16px} .mi-md{font-size:20px} .mi-lg{font-size:24px}
+    ::-webkit-scrollbar{width:5px;height:5px} ::-webkit-scrollbar-track{background:var(--c-surface)} ::-webkit-scrollbar-thumb{background:var(--c-border);border-radius:99px} ::-webkit-scrollbar-thumb:hover{background:var(--c-muted)}
+    input:focus,textarea:focus,select:focus,button:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(0,0,0,0.1)}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    .fade-up{animation:fadeUp .4s ease both} .fade-up-2{animation:fadeUp .4s .08s ease both} .fade-up-3{animation:fadeUp .4s .16s ease both} .fade-in{animation:fadeIn .3s ease both}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:500;border-radius:4px;border:1px solid;letter-spacing:.02em}
+    .badge-white{color:var(--c-text);border-color:var(--c-border);background:var(--c-surface)}
+    .badge-green{color:#22c55e;border-color:#166534;background:rgba(34,197,94,.08)}
+    .badge-blue{color:#60a5fa;border-color:#1d4ed8;background:rgba(59,130,246,.08)}
+    .badge-red{color:#f87171;border-color:#991b1b;background:rgba(239,68,68,.08)}
+    .badge-yellow{color:#fbbf24;border-color:#92400e;background:rgba(251,191,36,.08)}
+    .badge-purple{color:#c084fc;border-color:#7e22ce;background:rgba(192,132,252,.08)}
+    .card{background:var(--c-card);border:1px solid var(--c-border);border-radius:10px;transition:border-color .15s ease, background-color .15s ease}
+    .card:hover{border-color:var(--c-muted)}
+    .btn-primary{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--c-text);color:var(--c-bg);font-weight:600;font-size:13px;border-radius:7px;border:none;cursor:pointer;transition:opacity .15s,transform .1s}
+    .btn-primary:hover{opacity:.9;transform:translateY(-1px)} .btn-primary:active{transform:translateY(0)}
+    .btn-secondary{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--c-card);color:var(--c-text);font-weight:500;font-size:13px;border-radius:7px;border:1px solid var(--c-border);cursor:pointer;transition:border-color .15s,background .15s}
+    .btn-secondary:hover{border-color:var(--c-muted);background:var(--c-surface)}
+    .btn-danger{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(239,68,68,.1);color:#f87171;font-weight:500;font-size:13px;border-radius:7px;border:1px solid rgba(239,68,68,.25);cursor:pointer;transition:background .15s,border-color .15s}
+    .btn-danger:hover{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.45)}
+    .input{width:100%;background:var(--c-surface);border:1px solid var(--c-border);border-radius:7px;color:var(--c-text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 13px;transition:border-color .15s,box-shadow .15s}
+    .input::placeholder{color:var(--c-dim)} .input:focus{border-color:var(--c-muted);box-shadow:0 0 0 3px rgba(0,0,0,.04);outline:none}
+    .text-gradient{background:linear-gradient(135deg,var(--c-text) 0%,var(--c-soft) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .glow{box-shadow:0 0 40px rgba(0,0,0,.04)}
+    .grid-bg{background-image:linear-gradient(rgba(0,0,0,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.02) 1px,transparent 1px);background-size:32px 32px}
+    .chevron-icon{transition:transform .2s ease} .chevron-icon.open{transform:rotate(180deg)}
+    pre code{font-family:'JetBrains Mono',monospace;font-size:12px}
+    .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch} .table-scroll::-webkit-scrollbar{height:4px}
+
+    body, header, footer, .card, .input, .badge { transition: background-color .25s ease, border-color .25s ease, color .25s ease; }
+
+    @keyframes pageEnter {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0);   }
+    }
+    body { animation: pageEnter 0.25s ease both; }
+  </style>
+
+  <script>
+    (function() {
+      var t = localStorage.getItem('zarapi-theme') || 'dark';
+      if (t === 'light') document.documentElement.classList.add('light');
+    })();
+  </script>
+</head>
+<body>
