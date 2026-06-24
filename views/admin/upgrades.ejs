@@ -1,0 +1,124 @@
+<% var currentAdminPath = 'upgrades'; var appSettings = appSettings || {}; %>
+<%- include('../partials/adminhead', { title, settings, user, currentAdminPath, appSettings }) %>
+
+<div class="fade-up" style="display:flex;flex-direction:column;gap:14px">
+
+  <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+    <script>document.addEventListener('DOMContentLoaded',function(){Swal.fire({toast:true,position:'top-end',timer:3000,showConfirmButton:false,icon:'success',title:'<%- success[0] %>',background:'#111',color:'#ededed',iconColor:'#22c55e'});});</script>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+    <script>document.addEventListener('DOMContentLoaded',function(){Swal.fire({toast:true,position:'top-end',timer:3000,showConfirmButton:false,icon:'error',title:'<%- error[0] %>',background:'#111',color:'#ededed',iconColor:'#ef4444'});});</script>
+  <% } %>
+
+  <div class="card">
+    <div class="card-header" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px"><span class="mi mi-sm">workspace_premium</span> Upgrade Requests</div>
+      <span class="badge badge-yellow"><%= requests.filter(function(r){return r.status==='pending'}).length %> pending</span>
+    </div>
+
+    <% if (requests.length === 0) { %>
+      <p class="empty-msg">No upgrade requests yet.</p>
+    <% } else { %>
+      <div class="table-scroll">
+        <table class="admin-table" style="min-width:650px">
+          <thead>
+            <tr>
+              <th>#</th><th>User</th><th>Plan</th><th>Price</th><th>Telegram</th><th>Status</th><th>Date</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% requests.forEach(function(req) { %>
+              <tr>
+                <td class="mono dim"><%= req.id %></td>
+                <td style="font-weight:600;color:#ededed"><%= req.username %></td>
+                <td>
+                  <span class="badge badge-purple" style="font-size:10px"><%= req.plan %> (<%= req.duration %>d)</span>
+                </td>
+                <td class="mono soft">Rp<%= req.price.toLocaleString('id-ID') %></td>
+                <td class="mono">
+                  <% if (req.tg_username) { %>
+                    <a href="https://t.me/<%= req.tg_username.replace('@','') %>" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:11px"><%= req.tg_username %> ↗</a>
+                  <% } else { %><span class="dim">—</span><% } %>
+                </td>
+                <td>
+                  <span class="badge text-[10px] <%= req.status==='approved'?'badge-green':req.status==='rejected'?'badge-red':'badge-yellow' %>"><%= req.status %></span>
+                </td>
+                <td class="mono dim" style="font-size:10px"><%= new Date(req.created_at).toLocaleDateString() %></td>
+                <td>
+                  <% if (req.status === 'pending') { %>
+                    <div style="display:flex;gap:4px">
+                      <button type="button" class="btn btn-success approve-btn" style="padding:4px 8px;font-size:11px"
+                        data-id="<%= req.id %>" data-user="<%= req.username %>" data-plan="<%= req.plan %>" data-dur="<%= req.duration %>">
+                        <span class="mi mi-xs">check</span> Approve
+                      </button>
+                      <button type="button" class="btn btn-danger reject-btn" style="padding:4px 8px;font-size:11px"
+                        data-id="<%= req.id %>">
+                        <span class="mi mi-xs">close</span> Reject
+                      </button>
+                      <form action="/admin/upgrades/<%= req.id %>/approve" method="POST" id="approve-<%= req.id %>" style="display:none">
+                        <input type="hidden" name="note" id="note-a-<%= req.id %>"/>
+                      </form>
+                      <form action="/admin/upgrades/<%= req.id %>/reject" method="POST" id="reject-<%= req.id %>" style="display:none">
+                        <input type="hidden" name="note" id="note-r-<%= req.id %>"/>
+                      </form>
+                    </div>
+                  <% } else { %>
+                    <span class="dim" style="font-size:11px">Processed</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.approve-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id   = btn.dataset.id;
+      var user = btn.dataset.user;
+      var plan = btn.dataset.plan;
+      var dur  = btn.dataset.dur;
+      Swal.fire({
+        title: 'Approve Upgrade?',
+        html: '<span style="font-size:12px;color:#555"><b style="color:#ededed">' + user + '</b> will get Pro (' + plan + ', ' + dur + ' days)</span>' +
+              '<br><br><input id="swal-note" class="swal2-input" placeholder="Optional note to user" style="font-size:12px;margin:0;width:100%"/>',
+        icon: 'question', background:'#111', color:'#ededed', iconColor:'#22c55e',
+        showCancelButton:true, confirmButtonColor:'#22c55e', cancelButtonColor:'#1a1a1a',
+        confirmButtonText:'<span style="font-size:12px;font-weight:600;color:#000">Approve</span>',
+        cancelButtonText:'<span style="font-size:12px">Cancel</span>',
+      }).then(function(r) {
+        if (r.isConfirmed) {
+          document.getElementById('note-a-' + id).value = document.getElementById('swal-note')?.value || '';
+          document.getElementById('approve-' + id).submit();
+        }
+      });
+    });
+  });
+
+  document.querySelectorAll('.reject-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = btn.dataset.id;
+      Swal.fire({
+        title: 'Reject Request?',
+        html: '<input id="swal-note-r" class="swal2-input" placeholder="Reason for rejection" style="font-size:12px;margin:0;width:100%"/>',
+        icon: 'warning', background:'#111', color:'#ededed', iconColor:'#ef4444',
+        showCancelButton:true, confirmButtonColor:'#ef4444', cancelButtonColor:'#1a1a1a',
+        confirmButtonText:'<span style="font-size:12px;font-weight:600">Reject</span>',
+        cancelButtonText:'<span style="font-size:12px">Cancel</span>',
+      }).then(function(r) {
+        if (r.isConfirmed) {
+          document.getElementById('note-r-' + id).value = document.getElementById('swal-note-r')?.value || 'Rejected by admin';
+          document.getElementById('reject-' + id).submit();
+        }
+      });
+    });
+  });
+});
+</script>
+
+<%- include('../partials/admintail') %>
