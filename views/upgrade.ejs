@@ -1,0 +1,190 @@
+<%- include('partials/head', { title, settings }) %>
+<%- include('partials/navbar') %>
+
+<div class="max-w-5xl mx-auto px-5 py-14">
+
+  <% if (locals.messages && messages.error) { %>
+    <div class="max-w-md mx-auto mb-6 p-4 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-sm text-center fade-up">
+      <span class="mi mi-xs align-middle mr-1">error</span> <%= messages.error %>
+    </div>
+  <% } %>
+  <% if (locals.messages && messages.success) { %>
+    <div class="max-w-md mx-auto mb-6 p-4 rounded-lg border border-green-500/30 bg-green-500/10 text-green-400 text-sm text-center fade-up">
+      <span class="mi mi-xs align-middle mr-1">check_circle</span> <%= messages.success %>
+    </div>
+  <% } %>
+
+  <div class="text-center mb-14 fade-up">
+    <span class="badge badge-purple mb-4"><span class="mi mi-xs">workspace_premium</span> Pro Plans</span>
+    <h1 class="text-3xl sm:text-4xl font-bold text-white mt-3 mb-3">Upgrade to Pro</h1>
+    <p class="text-dim text-sm max-w-md mx-auto">Dapatkan akses API tanpa batas harian. Pembayaran instan via QRIS (Otomatis).</p>
+  </div>
+
+  <div class="mb-14 fade-up-2">
+    <div class="grid sm:grid-cols-3 gap-4">
+      <% plans.forEach(function(plan, i) { %>
+        <div class="card p-6 text-center <%= i === 1 ? 'border-purple-500/40' : '' %>" style="<%= i === 1 ? 'border-color:rgba(168,85,247,0.4)' : '' %>">
+          <div class="text-2xl font-bold text-white mb-1">
+            Rp<%= plan.price.toLocaleString('id-ID') %>
+          </div>
+          <div class="text-dim text-sm mb-4"><%= plan.label %></div>
+          <div class="text-xs text-dim mb-6 space-y-1">
+            <div>10.000 req/day</div>
+            <div>Berlaku <%= plan.duration %> hari</div>
+          </div>
+
+          <% if (!user) { %>
+            <a href="/auth/register" class="btn-primary w-full justify-center text-sm">
+              <span class="mi mi-xs">key</span> Register First
+            </a>
+          <% } else if (user.tier === 'pro') { %>
+            <div class="text-success text-xs font-mono flex items-center justify-center gap-1">
+              <span class="mi mi-xs">check_circle</span> Active Pro
+            </div>
+          <% } else { %>
+            <button
+              type="button"
+              class="btn-primary w-full justify-center text-sm"
+              data-plan="<%= plan.id %>"
+              data-label="<%= plan.label %>"
+              data-price="<%= plan.price %>"
+              id="plan-btn-<%= plan.id %>"
+            >
+              <span class="mi mi-xs">bolt</span> Select Plan
+            </button>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <% if (user && typeof userUpgrades !== 'undefined' && userUpgrades.length > 0) { %>
+    <div class="card overflow-hidden fade-up-3">
+      <div class="px-5 py-4 border-b border-border flex items-center gap-2">
+        <span class="mi mi-sm text-dim">history</span>
+        <p class="text-sm font-semibold text-white">Riwayat Pembayaran</p>
+      </div>
+      <div class="table-scroll">
+        <table class="w-full text-xs min-w-[400px]">
+          <thead class="bg-surface border-b border-border">
+            <tr>
+              <th class="px-4 py-3 text-left font-mono text-dim">Plan</th>
+              <th class="px-4 py-3 text-left font-mono text-dim">Status</th>
+              <th class="px-4 py-3 text-left font-mono text-dim">Tanggal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            <% userUpgrades.forEach(function(req) { %>
+              <tr class="hover:bg-white/[0.015]">
+                <td class="px-4 py-2.5 font-mono text-soft"><%= req.plan %></td>
+                <td class="px-4 py-2.5">
+                  <span class="badge <%= req.status === 'SUCCESS' ? 'badge-green' : 'badge-yellow' %> text-[10px]">
+                    <%= req.status %>
+                  </span>
+                </td>
+                <td class="px-4 py-2.5 font-mono text-dim"><%= new Date(req.created_at).toLocaleDateString() %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<div id="custom-payment-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm transition-opacity">
+  <div class="bg-[#161616] border border-border/50 rounded-xl w-full max-w-sm p-6 shadow-2xl transform transition-transform scale-95" id="modal-content">
+    <h3 class="text-lg font-bold text-white mb-2">Konfirmasi Pembayaran</h3>
+    
+    <div class="text-left text-sm text-dim mb-5">
+      <div class="bg-[#111] p-4 rounded-lg mb-4 border border-white/5">
+         <div class="flex justify-between items-center mb-2">
+           <span>Plan:</span>
+           <b class="text-white text-base" id="modal-plan-label">-</b>
+         </div>
+         <div class="flex justify-between items-center pt-2 border-t border-white/5">
+           <span>Total:</span>
+           <b class="text-white text-base" id="modal-plan-price">-</b>
+         </div>
+      </div>
+      <p class="text-[11px] leading-relaxed">Metode: <b class="text-white">QRIS (Otomatis)</b>. Saldo Pro akan langsung aktif setelah pembayaran terdeteksi oleh sistem.</p>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-4">
+      <button type="button" id="close-modal-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-dim hover:text-white hover:bg-white/5 transition-colors">Batal</button>
+      <button type="button" id="confirm-pay-btn" class="px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-lg shadow-purple-600/20">Bayar Sekarang</button>
+    </div>
+  </div>
+</div>
+
+<form action="/upgrade/pay" method="POST" id="auto-pay-form" style="display:none">
+  <input type="hidden" name="plan" id="ap-plan"/>
+</form>
+
+<%- include('partials/footer') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('custom-payment-modal');
+  const modalContent = document.getElementById('modal-content');
+  const btnClose = document.getElementById('close-modal-btn');
+  const btnConfirm = document.getElementById('confirm-pay-btn');
+  
+  const elPlanLabel = document.getElementById('modal-plan-label');
+  const elPlanPrice = document.getElementById('modal-plan-price');
+  const inputPlan = document.getElementById('ap-plan');
+  const formPay = document.getElementById('auto-pay-form');
+
+  // Fungsi untuk buka modal
+  const openModal = () => {
+    modal.classList.remove('hidden');
+    // Efek transisi popup ringan
+    setTimeout(() => {
+      modalContent.classList.remove('scale-95');
+      modalContent.classList.add('scale-100');
+    }, 10);
+  };
+
+  // Fungsi untuk tutup modal
+  const closeModal = () => {
+    modalContent.classList.remove('scale-100');
+    modalContent.classList.add('scale-95');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 150); // Menunggu transisi selesai
+  };
+
+  // Assign event klik ke semua tombol plan
+  document.querySelectorAll('[id^="plan-btn-"]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      // Ambil data dari tombol
+      const plan = btn.dataset.plan;
+      const label = btn.dataset.label;
+      const price = parseInt(btn.dataset.price);
+
+      // Isi data ke dalam modal HTML
+      elPlanLabel.innerText = label;
+      elPlanPrice.innerText = 'Rp' + price.toLocaleString('id-ID');
+      inputPlan.value = plan;
+
+      openModal();
+    });
+  });
+
+  // Event tutup modal jika klik tombol batal
+  btnClose.addEventListener('click', closeModal);
+
+  // Opsional: Tutup modal jika klik area luar (backdrop)
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) closeModal();
+  });
+
+  // Submit form jika klik bayar sekarang
+  btnConfirm.addEventListener('click', function() {
+    // Bisa ubah teks tombol jadi loading biar interaktif
+    btnConfirm.innerText = 'Memproses...';
+    btnConfirm.disabled = true;
+    formPay.submit();
+  });
+});
+</script>
